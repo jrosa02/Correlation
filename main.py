@@ -4,14 +4,15 @@ import numpy as np
 import experiments.single
 import experiments.sweep
 import experiments.minimize
+import experiments.ber_curve
 
 
 def load_params(config_path: str, overrides: dict) -> dict:
     with open(config_path) as f:
         p = yaml.safe_load(f)
-    p["eb_n0_range_db"] = np.arange(*p["eb_n0_range_db"])
+    p["snr_range_db"] = np.arange(*p["snr_range_db"])
     # Apply scalar CLI overrides; single sub-dict overrides handled separately
-    single_overrides = {k: v for k, v in overrides.items() if k in ("eb_n0_db", "bandpass_bw", "corr_len") and v is not None}
+    single_overrides = {k: v for k, v in overrides.items() if k in ("snr_db", "bandpass_bw", "corr_len") and v is not None}
     top_overrides = {k: v for k, v in overrides.items() if k not in single_overrides and v is not None}
     p.update(top_overrides)
     p.setdefault("single", {})
@@ -38,7 +39,7 @@ def parse_args():
 
     single = subparsers.add_parser("single", help="One pass with fixed parameters")
     add_common(single)
-    single.add_argument("--eb_n0_db", type=float, help="Override single.eb_n0_db")
+    single.add_argument("--snr_db", type=float, help="Override single.snr_db")
     single.add_argument("--bandpass_bw", type=float, help="Override single.bandpass_bw")
     single.add_argument("--corr_len", type=int, help="Override single.corr_len")
     single.add_argument("--threshold", type=float, default=None, help="Override single.threshold (None=auto)")
@@ -49,6 +50,9 @@ def parse_args():
     minimize = subparsers.add_parser("minimize", help="Optimise filter parameters")
     add_common(minimize)
 
+    ber_curve = subparsers.add_parser("ber_curve", help="BER vs SNR curve at fixed params")
+    add_common(ber_curve)
+
     return parser.parse_args()
 
 
@@ -58,9 +62,10 @@ def main():
     p = load_params(args.config, overrides)
 
     match args.mode:
-        case "single":   experiments.single.run(p)
-        case "sweep":    experiments.sweep.run(p)
-        case "minimize": experiments.minimize.run(p)
+        case "single":    experiments.single.run(p)
+        case "sweep":     experiments.sweep.run(p)
+        case "minimize":  experiments.minimize.run(p)
+        case "ber_curve": experiments.ber_curve.run(p)
 
 
 if __name__ == "__main__":

@@ -3,7 +3,6 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from pathlib import Path
-from scipy.special import erfc
 
 
 def _save(fig: plt.Figure, path: str) -> None:
@@ -18,6 +17,7 @@ def plot_waveforms(
     save_path: str,
     params: dict | None = None,
     corr_threshold: float | None = None,
+    peak_indices: np.ndarray | None = None,
 ) -> None:
     """Stack time-domain waveforms for each pipeline stage."""
     n = len(stages)
@@ -25,12 +25,32 @@ def plot_waveforms(
     if n == 1:
         axes = [axes]
     total_samples = max(len(s) for s in stages.values())
+    n_symbols = total_samples / sps
     for ax, (label, sig) in zip(axes, stages.items()):
-        if len(sig) * sps == total_samples:
-            # bit-rate signal: draw one bar per bit slot aligned with sample-rate x-axis
+        is_bits = len(sig) * sps == total_samples
+        if "Decoded" in label and is_bits:
+            # Event-style: vertical lines + fractional-symbol offset for each group of 1s
+            ax.set_xlim(0, n_symbols)
+            ax.set_ylim(-0.2, 1.8)
+            in_group = False
+            for i, v in enumerate(sig):
+                if v > 0 and not in_group:
+                    peak_x = (peak_indices[i] / sps) if peak_indices is not None else i
+                    ax.axvline(peak_x, color="C1", lw=1.5, alpha=0.85)
+                    ax.text(peak_x, 1.25, f"{peak_x:.2f}", ha="center", va="bottom",
+                            fontsize=10, color="b", rotation=45)
+                    in_group = True
+                elif v == 0:
+                    in_group = False
+        elif is_bits:
             centers = np.arange(len(sig)) + 0.5
             ax.bar(centers, sig, width=1.0, align="center", color="C0", alpha=0.7)
-            ax.set_xlim(0, total_samples / sps)
+            ax.set_xlim(0, n_symbols)
+            if "Bits" in label:
+                for i, v in enumerate(sig):
+                    if v > 0:
+                        ax.text(i + 0.5, v + 0.05, str(i), ha="center",
+                                va="bottom", fontsize=10, rotation=45, color="b")
         else:
             t = np.arange(len(sig)) / sps
             ax.plot(t, sig, lw=0.8)
@@ -91,13 +111,10 @@ def plot_ber_curve(
 ) -> None:
     """BER vs Eb/N0 for multiple parameter sets, with theoretical BPSK reference."""
     fig, ax = plt.subplots(figsize=(8, 5))
-    snr_lin = 10 ** (snr_range / 10)
-    ber_theory = 0.5 * erfc(np.sqrt(snr_lin))
-    ax.semilogy(snr_range, ber_theory, "k--", lw=1.5, label="BPSK theory")
     for label, ber in ber_dict.items():
         ber_clipped = np.clip(ber, 1e-6, 1.0)
         ax.semilogy(snr_range, ber_clipped, marker=".", lw=1, label=label)
-    ax.set_xlabel("Eb/N0 (dB)")
+    ax.set_xlabel("SNR (dB)")
     ax.set_ylabel("BER")
     ax.set_title("BER vs Eb/N0")
     ax.legend(fontsize=8)

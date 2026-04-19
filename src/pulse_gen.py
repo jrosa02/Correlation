@@ -16,84 +16,63 @@ def generate_bits(n_bits: int, min_gap: int = 0, seed: int | None = None) -> np.
     return bits
 
 
-def make_tx_pulse(shape: str, sps: int, duty_cycle: float = 0.5, **kwargs) -> np.ndarray:
-    """Return a unipolar (≥ 0), symmetric TX pulse of length sps.
-
-    Represents a physical laser pulse: zero outside the active region,
-    positive within — so bits 0,1,0 upsample to 0…0, +…+, 0…0.
-    """
-    sps = sps if sps % 2 == 0 else sps + 1
-    half_width = max(1, int(duty_cycle * sps / 2))
-    center = sps // 2
+def make_tx_pulse(shape: str, sps: int, **kwargs) -> np.ndarray:
+    """Unipolar TX pulse: sps ones at centre, energy-normalised to 1. Length = sps."""
     pulse = np.zeros(sps)
-    t_local = np.arange(2 * half_width) - half_width + 0.5  # symmetric around 0
-
+    pulse[:] = 0.0
     if shape == "rect":
-        pulse[center - half_width: center + half_width] = 1.0
-
+        pulse[:] = 1.0
     elif shape == "gaussian":
-        sigma = half_width / 2
-        pulse[center - half_width: center + half_width] = np.exp(-0.5 * (t_local / sigma) ** 2)
-
+        t = np.arange(sps) - (sps - 1) / 2
+        sigma = sps / 4
+        pulse[:] = np.exp(-0.5 * (t / sigma) ** 2)
     elif shape == "raised_cosine":
-        pulse[center - half_width: center + half_width] = (
-            0.5 * (1 - np.cos(np.pi * (t_local + half_width) / half_width))
-        )
-
+        t = np.arange(sps)
+        pulse[:] = 0.5 * (1 - np.cos(2 * np.pi * t / sps))
     elif shape == "delta":
-        pulse[center] = 1.0
-
+        pulse[sps // 2] = 1.0
     else:
         raise ValueError(f"Unknown pulse shape: {shape!r}")
-
-    energy = np.sum(pulse ** 2)
-    return pulse / np.sqrt(energy) if energy > 0 else pulse
+    return pulse
 
 
-def make_pulse_template(shape: str, sps: int, duty_cycle: float = 0.5, **kwargs) -> np.ndarray:
-    """Return a zero-mean, symmetric pulse template of length sps.
+def make_pulse_template(shape: str, sps: int, neg_len: int | None = None, **kwargs) -> np.ndarray:
+    """Correlation template: [neg_val]*neg_len + [1.0]*sps + [neg_val]*neg_len.
 
-    All shapes are symmetric around the centre sample and have integral ≈ 0,
-    resembling  -1 -1 | +1 +1 +1 +1 | -1 -1  (bipolar / wavelet-like).
-
-    shape: "rect" | "gaussian" | "raised_cosine" | "delta"
-    duty_cycle: fraction of sps occupied by the positive centre lobe
+    neg_len: negative wing samples per side (even total length = sps + 2*neg_len).
+             Defaults to sps.
+    neg_val: snapped to nearest power of 2 so that sum == 0:
+             neg_val = sps / (2 * neg_len).
+    All non-rect shapes use the same structure with a raised-cosine positive lobe.
     """
-    sps = sps if sps % 2 == 0 else sps + 1  # ensure even length for symmetry
-    center = sps / 2
-    t = np.arange(sps) - center + 0.5   # symmetric around 0: [-(sps/2)+.5 … (sps/2)-.5]
-    half_width = max(1, duty_cycle * sps / 2)
+    if neg_len is None:
+        neg_len = sps
+    neg_len = max(1, int(neg_len))
+    # zero-sum: sps * 1 + 2 * neg_len * neg_val = 0 → neg_val = -sps / (2*neg_len)
+    exact = sps / (2 * neg_len)
+    # snap to nearest power of 2
+    neg_val = -(2 ** round(np.log2(exact)))
 
-    if shape == "rect":
-        # Positive centre lobe, negative wings — like -1…-1 +1…+1 -1…-1
-        wing = int((sps - 2 * int(half_width)) // 2)
-        pulse = np.full(sps, -1.0)
-        pulse[wing: sps - wing] = 1.0
-
+    if shape in ("rect", "delta"):
+        pos = np.ones(sps)
     elif shape == "gaussian":
-        # Mexican-hat (Ricker wavelet): second derivative of Gaussian
-        sigma = half_width / np.sqrt(2)
-        z = (t / sigma) ** 2
-        pulse = (1 - z) * np.exp(-z / 2)
-
+        t = np.arange(sps) - (sps - 1) / 2
+        sigma = sps / 4
+        pos = np.exp(-0.5 * (t / sigma) ** 2)
+        pos /= pos.max()
     elif shape == "raised_cosine":
-        # Full cosine cycle: naturally zero-mean and symmetric
-        pulse = np.cos(2 * np.pi * t / sps)
-
-    elif shape == "delta":
-        # Bipolar doublet centred: −1 at −0.5, +1 at +0.5 (one sample each side)
-        pulse = np.zeros(sps)
-        pulse[sps // 2 - 1] = -1.0
-        pulse[sps // 2]     =  1.0
-
+        t = np.arange(sps)
+        pos = 0.5 * (1 - np.cos(2 * np.pi * t / sps))
     else:
         raise ValueError(f"Unknown pulse shape: {shape!r}")
 
-    # Enforce exact zero mean (removes any floating-point residual)
-    pulse -= pulse.mean()
-
-    energy = np.sum(pulse ** 2)
-    return pulse / np.sqrt(energy) if energy > 0 else pulse
+    pulse = np.concatenate([
+        np.full(neg_len, neg_val),
+        pos,
+        np.full(neg_len, neg_val),
+    ])
+    pulse -= pulse.mean()  # enforce exact zero sum
+    return pulse
 
 
 def build_signal(bits: np.ndarray, template: np.ndarray, sps: int) -> np.ndarray:
