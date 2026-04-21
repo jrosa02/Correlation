@@ -1,6 +1,7 @@
 from pathlib import Path
 import numpy as np
-from src.pulse_gen import generate_bits, make_tx_pulse, make_pulse_template, build_signal
+from src.ppmbin import generate_bits
+from src.ppmsignal import make_tx_pulse, make_pulse_template, build_signal
 from src.runner import run_trial
 from src import plots
 
@@ -10,7 +11,7 @@ def run(p: dict) -> None:
     snr_range = p["snr_range_db"]
     sp = p["single"]
 
-    bits = generate_bits(p["n_bits"], min_gap=p["min_gap_bits"], seed=p["seed"])
+    bits = generate_bits(p["n_slots"], seed=p["seed"])
     tx_pulse = make_tx_pulse(p["pulse_shape"], p["sps"])
     corr_template = make_pulse_template(p["pulse_shape"], p["sps"], neg_len=p.get("neg_len"))
     tx_signal = build_signal(bits, tx_pulse, p["sps"])

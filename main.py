@@ -28,11 +28,10 @@ def parse_args():
 
     # shared overrides added to every subcommand
     def add_common(sub):
-        sub.add_argument("--n_bits", type=int)
+        sub.add_argument("--n_slots", type=int)
         sub.add_argument("--sps", type=int)
         sub.add_argument("--pulse_shape", choices=["rect", "gaussian", "raised_cosine", "delta"])
         sub.add_argument("--duty_cycle", type=float)
-        sub.add_argument("--min_gap_bits", type=int)
         sub.add_argument("--seed", type=int)
         sub.add_argument("--f_center", type=float)
         sub.add_argument("--output_dir")

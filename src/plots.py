@@ -63,7 +63,7 @@ def plot_waveforms(
 
     title = "Pipeline waveforms"
     if params:
-        keys = ["pulse_shape", "duty_cycle", "min_gap_bits", "sps", "n_bits", "f_center", "seed"]
+        keys = ["pulse_shape", "duty_cycle", "sps", "n_slots", "f_center", "seed"]
         param_str = "  |  ".join(f"{k}={params[k]}" for k in keys if k in params)
         title = f"Pipeline waveforms\n{param_str}"
     fig.suptitle(title, fontsize=10)

@@ -1,8 +1,7 @@
-n_bits: 100000
-sps: 8
+n_slots: 100
+sps: 4
 pulse_shape: rect        # rect | gaussian | raised_cosine | delta
-neg_len: 60
-min_gap_bits: 8
+neg_len: 24
 seed: 42
 snr_range_db: [-5, 30, 1]   # [start, stop, step] passed to np.arange
 bandpass_bw_sweep: [0.1, 0.3, 0.5, 1.0]   # normalized (0–1)
