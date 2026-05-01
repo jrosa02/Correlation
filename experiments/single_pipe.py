@@ -5,7 +5,7 @@ from matplotlib.axes import Axes
 import numpy as np
 from matplotlib import pyplot as plt
 from src import AWGN, PlotPipe, BinPPMGen, SignalPipeRunner, UpSampler, CorrPipe, BandpassPipe, ThresholdPipe, MaximumPipe, DecodeSink
-from src.metrics import bit_error_rate, word_error_rate
+from src.metrics import bit_error_rate, per_bit_error_rate, word_error_rate
 
 
 fig, axes = plt.subplots(8, 1)
@@ -14,13 +14,13 @@ fig.tight_layout(h_pad=1, w_pad=1)
 
 seed = 42
 chunk_size = 2048
-ppm_rank = 16
+ppm_rank = 1024
 rng = np.random.default_rng(seed)
 input_data = np.concatenate((rng.integers(0, ppm_rank, 8*chunk_size, dtype=int), [0, ppm_rank-1]))
 
-sampling_rate = 8
+sampling_rate = 32
 
-snr = 0.3
+snr = 0.2
 
 threshold = 0.3
 
@@ -60,4 +60,6 @@ print(output_data)
 
 print(word_error_rate(input_data, output_data))
 print(bit_error_rate(input_data, output_data, ppm_rank))
+print(per_bit_error_rate(input_data, output_data, ppm_rank))
+
 
