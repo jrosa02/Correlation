@@ -38,5 +38,6 @@ class PlotPipe(SignalPipe):
         self._chunk_index += 1
         return signal
     
-    def __repr__(self) -> str:
-        return ""
+    def reset(self) -> None:
+        self._chunk_index = 0
+        self.ax.clear()

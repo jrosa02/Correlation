@@ -41,11 +41,8 @@ class BinPPMGen(SignalPipe):
         self._chunk_idx += self.chunk_size
         return symbols
 
-    def process(self, signal: np.ndarray) -> np.ndarray:
-        raise NotImplementedError("BinPPMGen is source-only")
-
-    def consume(self, signal: np.ndarray):
-        raise NotImplementedError("BinPPMGen is source-only")
+    def reset(self) -> None:
+        self._chunk_idx = 0
 
 def generate_bits(n_slots: int, seed: int | None = None) -> BinPPMSymbol:
     """Generate random binary PPM symbol."""

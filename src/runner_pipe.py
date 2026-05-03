@@ -29,3 +29,8 @@ class SignalPipeRunner():
             repr += str(elem) + "->"
         repr += str(self.pipe_elements[-1])
         return repr
+    
+
+    def reset(self):
+        for elem in self.pipe_elements:
+            elem.reset()

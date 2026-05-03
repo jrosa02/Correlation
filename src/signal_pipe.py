@@ -76,6 +76,10 @@ class SignalPipe(abc.ABC):
     def consume(self, signal: np.ndarray):
         raise NotImplementedError()
     
+    @abc.abstractmethod
+    def reset(self) -> None:
+        pass
+    
 class Terminator(SignalPipe):
     def consume(self, signal: np.ndarray[tuple[Any, ...], np.dtype[Any]]):
         return

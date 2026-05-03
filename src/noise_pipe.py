@@ -18,3 +18,6 @@ class AWGN(SignalPipe):
 
     def process(self, signal: ndarray[tuple[Any, ...], dtype[Any]]) -> ndarray[tuple[Any, ...], dtype[Any]]:
         return self.add_noise(signal)
+    
+    def reset(self) -> None:
+        pass

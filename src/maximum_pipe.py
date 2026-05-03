@@ -21,4 +21,7 @@ class MaximumPipe(SignalPipe):
         out = np.zeros((n_rows, n_cols), dtype=np.float64)
         out[np.arange(n_rows), offsets] = 1.0
         return out
+    
+    def reset(self) -> None:
+        pass
 

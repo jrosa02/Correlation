@@ -14,3 +14,6 @@ class ThresholdPipe(SignalPipe):
     def process(self, signal: ndarray[tuple[Any, ...], dtype[Any]]) -> ndarray[tuple[Any, ...], dtype[Any]]:
         return signal>self.threshold
 
+    def reset(self) -> None:
+        pass
+

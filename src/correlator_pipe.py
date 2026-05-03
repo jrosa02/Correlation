@@ -28,4 +28,6 @@ class CorrPipe(SignalPipe):
         rows = signal.reshape(-1, signal.shape[-1]) if signal.ndim > 1 else signal[np.newaxis]
         result = np.divide(np.stack([np.correlate(row.astype(np.float64), ref, 'same') for row in rows]), len(ref))
         return result if signal.ndim > 1 else result[0]
-
+    
+    def reset(self) -> None:
+        pass

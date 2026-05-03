@@ -32,3 +32,6 @@ class DecodeSink(SignalPipe):
     @property
     def get_data(self):
         return self.data.copy()
+    
+    def reset(self) -> None:
+        self._index = 0    

@@ -21,3 +21,6 @@ class BandpassPipe(SignalPipe):
 
     def process(self, signal: ndarray[tuple[Any, ...], dtype[Any]]) -> ndarray[tuple[Any, ...], dtype[Any]]:
         return self.bandpass_filter(signal)
+    
+    def reset(self) -> None:
+        pass

@@ -20,3 +20,6 @@ class UpSampler(SignalPipe):
                 return self.upsample_repeat(signal)
             case _:
                 raise NotImplementedError()
+            
+    def reset(self) -> None:
+        pass
