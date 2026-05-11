@@ -7,7 +7,7 @@ from src.signal_pipe import SignalPipe
 
 
 class AWGN(SignalPipe):
-    def __init__(self, noise_power, seed: int | None = None) -> None:
+    def __init__(self, noise_power, seed: int = 42) -> None:
         super().__init__(seed)
         self.noise_power = noise_power
         self.noise = None

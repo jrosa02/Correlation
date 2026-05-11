@@ -6,19 +6,16 @@ matplotlib.use('Agg')
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
-from src import AWGN, BinPPMGen, SignalPipeRunner, UpSampler, CorrPipe, BandpassPipe, ThresholdPipe, MaximumPipe, DecodeSink
-from src.metrics import bit_error_rate, word_error_rate
+
+from src.models.model1 import Model1
 
 
 seed = 42
 chunk_size = 1024
 ppm_rank = 1024
-rng = np.random.default_rng(seed)
-input_data = np.concatenate((rng.integers(0, ppm_rank, 2*chunk_size, dtype=int), [0, ppm_rank-1]))
 
 noise_powers = np.logspace(-2, -0.3, 8)
 sampling_rates = [4, 8, 16, 32, 64]
-threshold = 0.3
 
 ber_grid = np.zeros((len(sampling_rates), len(noise_powers)))
 wer_grid = np.zeros((len(sampling_rates), len(noise_powers)))
@@ -26,23 +23,18 @@ wer_grid = np.zeros((len(sampling_rates), len(noise_powers)))
 
 def run_row(i, sr):
     for j, noise_pow in enumerate(noise_powers):
-        runner = SignalPipeRunner(seed)
-        runner.append(BinPPMGen(input_data, chunk_size, ppm_rank))
-        runner.append(UpSampler(sr))
-        runner.append(AWGN(noise_pow))
-        runner.append(BandpassPipe(0.007, 0.7))
-        runner.append(CorrPipe('rect', pulse_width=sr))
-        runner.append(ThresholdPipe(threshold))
-        runner.append(CorrPipe('triangle', pulse_width=sr))
-        runner.append(MaximumPipe(rate=sr))
-        decoder = DecodeSink(len(input_data), chunk_size, ppm_rank, sr)
-        runner.append(decoder)
-        runner.run()
-
-        output_data = decoder.get_data
-        ber_grid[i, j] = bit_error_rate(input_data, output_data, ppm_rank)
-        wer_grid[i, j] = word_error_rate(input_data, output_data)
-        print(f"sr={sr:2d}  noise={noise_pow:.3e}  BER={ber_grid[i,j]:.4f}  WER={wer_grid[i,j]:.4f}")
+        model = Model1(
+            snr=noise_pow,
+            sampling_rate=sr,
+            chunk_size=chunk_size,
+            ppm_rank=ppm_rank,
+            n_symbols=2 * chunk_size,
+            seed=seed,
+        )
+        result = model.run()
+        ber_grid[i, j] = result.ber
+        wer_grid[i, j] = result.wer
+        print(f"sr={sr:2d}  noise={noise_pow:.3e}  BER={result.ber:.4f}  WER={result.wer:.4f}")
 
 try:
     with ThreadPoolExecutor(max_workers=len(sampling_rates)) as executor:

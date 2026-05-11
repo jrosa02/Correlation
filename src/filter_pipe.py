@@ -17,7 +17,10 @@ class BandpassPipe(SignalPipe):
 
     def bandpass_filter(self, sig: np.ndarray) -> np.ndarray:
         sos = sp.butter(self.order, [self.low, self.high], btype="bandpass", output="sos")
-        return sp.sosfiltfilt(sos, sig)
+        filtered = sp.sosfilt(sos, sig)
+        assert isinstance(filtered, np.ndarray)
+        return filtered
+
 
     def process(self, signal: ndarray[tuple[Any, ...], dtype[Any]]) -> ndarray[tuple[Any, ...], dtype[Any]]:
         return self.bandpass_filter(signal)
