@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
@@ -50,7 +51,8 @@ if __name__ == "__main__":
     ]
 
     try:
-        with ProcessPoolExecutor(max_workers=min(len(tasks), os.cpu_count())) as executor:
+        mp_ctx = multiprocessing.get_context('spawn')
+        with ProcessPoolExecutor(max_workers=min(len(tasks), os.cpu_count()), mp_context=mp_ctx) as executor:
             futures = {executor.submit(run_cell, t): t for t in tasks}
             for f in as_completed(futures):
                 i, j, ber, wer = f.result()
