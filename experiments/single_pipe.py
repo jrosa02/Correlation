@@ -7,8 +7,8 @@ model = Model1(
     bandpass_high=0.9,
     chunk_size=48,
     ppm_rank=1024,
-    n_symbols=4096,
-    sampling_rate=64,
+    n_symbols=1<<16,
+    sampling_rate=32,
     seed=42,
     plotting=True
 )

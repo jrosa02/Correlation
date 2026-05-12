@@ -1,23 +1,27 @@
 from typing import Any
 
 import numpy as np
-from numpy import dtype, ndarray
+from numba import njit
 
 from src.signal_pipe import SignalPipe
+
+
+@njit(cache=True, fastmath=True, nogil=True, parallel=True)
+def _add_noise(signal, std, rng):
+    return signal + rng.normal(0.0, std, signal.shape)
 
 
 class AWGN(SignalPipe):
     def __init__(self, noise_power, seed: int = 42) -> None:
         super().__init__(seed)
         self.noise_power = noise_power
-        self.noise = None
+        self.std = np.sqrt(noise_power)
 
-    def add_noise(self, signal: ndarray):
-        self.noise = self.rng.normal(0, np.sqrt(self.noise_power), signal.shape)
-        return signal + self.noise
+    def add_noise(self, signal: np.ndarray) -> np.ndarray:
+        return _add_noise(signal, self.std, self.rng)
 
-    def process(self, signal: ndarray[tuple[Any, ...], dtype[Any]]) -> ndarray[tuple[Any, ...], dtype[Any]]:
+    def process(self, signal: np.ndarray[tuple[Any, ...], np.dtype[Any]]) -> np.ndarray[tuple[Any, ...], np.dtype[Any]]:
         return self.add_noise(signal)
-    
+
     def reset(self) -> None:
         pass

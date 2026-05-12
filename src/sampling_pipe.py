@@ -6,7 +6,7 @@ from numba import njit, prange
 from src.signal_pipe import SignalPipe
 
 
-@njit(parallel=True, cache=True)
+@njit(parallel=True, cache=True, fastmath=True, nogil=True)
 def _repeat_upsample(signal, rate):
     n_rows, n_cols = signal.shape
     out = np.empty((n_rows, n_cols * rate), signal.dtype)

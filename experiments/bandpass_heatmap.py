@@ -15,8 +15,8 @@ chunk_size = 1024
 ppm_rank = 1024
 sampling_rate = 32
 
-bandpass_lows = np.logspace(-6, -4, 4)
-bandpass_highs = 1-np.logspace(-4, -2, 5)
+bandpass_lows = np.logspace(-5, -4, 4)
+bandpass_highs = 1-np.logspace(-3, -2, 20)
 noise_powers = np.logspace(-0.6, -0.2, 6)
 
 
@@ -29,7 +29,7 @@ def run_cell(args):
         sampling_rate=sampling_rate,
         chunk_size=chunk_size,
         ppm_rank=ppm_rank,
-        n_symbols=2 * chunk_size,
+        n_symbols=4 * chunk_size,
         seed=seed,
     )
     result = model.run()
