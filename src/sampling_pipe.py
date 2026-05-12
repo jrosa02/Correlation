@@ -1,8 +1,18 @@
 from typing import Any, Literal
 
 import numpy as np
+from numba import njit, prange
 
 from src.signal_pipe import SignalPipe
+
+
+@njit(parallel=True, cache=True)
+def _repeat_upsample(signal, rate):
+    n_rows, n_cols = signal.shape
+    out = np.empty((n_rows, n_cols * rate), signal.dtype)
+    for r in prange(n_rows):
+        out[r] = np.repeat(signal[r], rate)
+    return out
 
 
 class UpSampler(SignalPipe):
@@ -11,15 +21,12 @@ class UpSampler(SignalPipe):
         self.rate = rate
         self.method = method
 
-    def upsample_repeat(self, signal: np.ndarray) -> np.ndarray:
-        return np.repeat(signal, self.rate, axis=1)
-    
     def process(self, signal: np.ndarray[tuple[Any, ...], np.dtype[Any]]) -> np.ndarray[tuple[Any, ...], np.dtype[Any]]:
         match self.method:
             case 'repeat':
-                return self.upsample_repeat(signal)
+                return _repeat_upsample(signal, self.rate)
             case _:
                 raise NotImplementedError()
-            
+
     def reset(self) -> None:
         pass

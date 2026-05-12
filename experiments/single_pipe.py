@@ -3,10 +3,11 @@ from src.models.model1 import Model1
 model = Model1(
     snr=0.4,
     threshold=0.3,
-    bandpass_low=0.007,
-    bandpass_high=0.999,
+    bandpass_low=0.002,
+    bandpass_high=0.9,
     chunk_size=48,
-    ppm_rank=16,
+    ppm_rank=1024,
+    n_symbols=4096,
     sampling_rate=64,
     seed=42,
     plotting=True

@@ -16,7 +16,7 @@ class Model1(ABCModel):
         snr: float = 0.2,
         threshold: float = 0.3,
         bandpass_low: float = 0.007,
-        bandpass_high: float = 0.9,
+        bandpass_high: float = 0.99,
         chunk_size: int = 2048,
         ppm_rank: int = 1024,
         sampling_rate: int = 32,

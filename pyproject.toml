@@ -10,6 +10,7 @@ dependencies = [
     "scipy>=1.13",
     "matplotlib>=3.9",
     "py-spy>=0.4.1",
+    "numba>=0.65.1",
 ]
 
 [build-system]
