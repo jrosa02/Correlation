@@ -1,4 +1,6 @@
+import json
 import os
+from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import matplotlib
@@ -78,5 +80,22 @@ if __name__ == "__main__":
         ax.set_title(title)
         fig.colorbar(im, ax=ax, label=title)
 
-    fig.savefig('output/sampling_snr_heatmap.png', dpi=150, bbox_inches='tight')
-    print("Saved output/sampling_snr_heatmap.png")
+    ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+    fig.savefig(f'output/sampling_snr_heatmap_{ts}.png', dpi=150, bbox_inches='tight')
+    print(f"Saved output/sampling_snr_heatmap_{ts}.png")
+
+    results = {
+        "datetime": datetime.now().isoformat(),
+        "params": {
+            "seed": seed,
+            "chunk_size": chunk_size,
+            "ppm_rank": ppm_rank,
+            "sampling_rates": sampling_rates,
+            "noise_powers": noise_powers.tolist(),
+        },
+        "ber": ber_grid.tolist(),
+        "wer": wer_grid.tolist(),
+    }
+    with open(f'output/sampling_snr_heatmap_{ts}.json', 'w') as f:
+        json.dump(results, f)
+    print(f"Saved output/sampling_snr_heatmap_{ts}.json")
