@@ -1,4 +1,6 @@
+import json
 import os
+from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import matplotlib
@@ -15,9 +17,9 @@ chunk_size = 1024
 ppm_rank = 1024
 sampling_rate = 32
 
-bandpass_lows = np.logspace(-5, -4, 4)
-bandpass_highs = 1-np.logspace(-3, -2, 20)
-noise_powers = np.logspace(-0.6, -0.2, 6)
+bandpass_lows = np.logspace(-3, -1, 4)
+bandpass_highs = 1-np.logspace(-5, -1, 5)
+noise_powers = np.logspace(-0.6, -0.2, 3)
 
 
 def run_cell(args):
@@ -29,18 +31,18 @@ def run_cell(args):
         sampling_rate=sampling_rate,
         chunk_size=chunk_size,
         ppm_rank=ppm_rank,
-        n_symbols=4 * chunk_size,
+        n_symbols=1*chunk_size,
         seed=seed,
     )
     result = model.run()
     print(f"bp_low={bp_low:.3f}  bp_high={bp_high:.2f}  noise={noise_pow:.3e}  BER={result.ber:.4f}  WER={result.wer:.4f}")
-    return i, j, result.ber, result.wer
+    return i, j, k, result.ber, result.wer
 
 
 if __name__ == "__main__":
     n_snr = len(noise_powers)
-    ber_sum = np.zeros((len(bandpass_lows), len(bandpass_highs)))
-    wer_sum = np.zeros_like(ber_sum)
+    ber_raw = np.zeros((len(bandpass_lows), len(bandpass_highs), n_snr))
+    wer_raw = np.zeros_like(ber_raw)
 
     tasks = [
         (i, j, k, bp_low, bp_high, noise_pow)
@@ -50,17 +52,28 @@ if __name__ == "__main__":
     ]
 
     try:
-        with ProcessPoolExecutor(max_workers=min(len(tasks), os.cpu_count())) as executor:
+        with ProcessPoolExecutor(max_workers=min(len(tasks), os.cpu_count()//2)) as executor:
             futures = {executor.submit(run_cell, t): t for t in tasks}
             for f in as_completed(futures):
-                i, j, ber, wer = f.result()
-                ber_sum[i, j] += ber
-                wer_sum[i, j] += wer
+                i, j, k, ber, wer = f.result()
+                ber_raw[i, j, k] = ber
+                wer_raw[i, j, k] = wer
     except KeyboardInterrupt:
         print("KeyboardInterrupt, saving plot")
 
-    ber_grid = ber_sum / n_snr
-    wer_grid = wer_sum / n_snr
+    # Normalize each SNR slice by its grid max so every noise level contributes equally
+    ber_norm = np.zeros_like(ber_raw)
+    wer_norm = np.zeros_like(wer_raw)
+    for k in range(n_snr):
+        ber_max = ber_raw[:, :, k].max()
+        wer_max = wer_raw[:, :, k].max()
+        if ber_max > 0:
+            ber_norm[:, :, k] = ber_raw[:, :, k] / ber_max
+        if wer_max > 0:
+            wer_norm[:, :, k] = wer_raw[:, :, k] / wer_max
+
+    ber_grid = ber_norm.mean(axis=2)
+    wer_grid = wer_norm.mean(axis=2)
 
     os.makedirs('output', exist_ok=True)
 
@@ -73,7 +86,7 @@ if __name__ == "__main__":
     all_pos = np.concatenate([ber_grid[ber_grid > 0], wer_grid[wer_grid > 0]])
     floor = float(all_pos.min()) if len(all_pos) else 1e-7
 
-    for ax, grid, title in zip(axes, [ber_grid, wer_grid], ['BER', 'WER']):
+    for ax, grid, title in zip(axes, [ber_grid, wer_grid], ['Normalized BER', 'Normalized WER']):
         clipped = np.clip(grid, floor, 1.0)
         im = ax.pcolormesh(X, Y, clipped.T, norm=LogNorm(vmin=clipped.min(), vmax=clipped.max()), cmap='viridis')
         ax.set_xticks(xi)
@@ -84,8 +97,29 @@ if __name__ == "__main__":
         ax.yaxis.set_minor_locator(plt.NullLocator())
         ax.set_xlabel('bandpass_low')
         ax.set_ylabel('bandpass_high')
-        ax.set_title(f'{title} (avg over {n_snr} SNR levels)')
+        ax.set_title(f'{title} (mean of {n_snr} per-SNR max-normalized slices)')
         fig.colorbar(im, ax=ax, label=title)
 
-    fig.savefig('output/bandpass_heatmap.png', dpi=150, bbox_inches='tight')
-    print("Saved output/bandpass_heatmap.png")
+    ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+    fig.savefig(f'output/bandpass_heatmap_{ts}.png', dpi=150, bbox_inches='tight')
+    print(f"Saved output/bandpass_heatmap_{ts}.png")
+
+    results = {
+        "datetime": datetime.now().isoformat(),
+        "params": {
+            "seed": seed,
+            "chunk_size": chunk_size,
+            "ppm_rank": ppm_rank,
+            "sampling_rate": sampling_rate,
+            "bandpass_lows": bandpass_lows.tolist(),
+            "bandpass_highs": bandpass_highs.tolist(),
+            "noise_powers": noise_powers.tolist(),
+        },
+        "ber_raw": ber_raw.tolist(),
+        "wer_raw": wer_raw.tolist(),
+        "normalized_ber": ber_grid.tolist(),
+        "normalized_wer": wer_grid.tolist(),
+    }
+    with open(f'output/bandpass_heatmap_{ts}.json', 'w') as f:
+        json.dump(results, f)
+    print(f"Saved output/bandpass_heatmap_{ts}.json")
