@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 
 from src import (
     AWGN, BandpassPipe, BinPPMGen, CorrPipe, DecodeSink,
-    MaximumPipe, PlotPipe, SignalPipeRunner, ThresholdPipe, UpSampler,
+    BestFitPipe, PlotPipe, SignalPipeRunner, ThresholdPipe, UpSampler,
 )
 from src.metrics import bit_error_rate, per_bit_error_rate, word_error_rate
 from src.models.model import ABCModel, ModelResult
@@ -48,7 +48,7 @@ class Model1(ABCModel):
         self.construct_pipeline()
 
     def _init_figure(self) -> None:
-        self.fig, self.axes = plt.subplots(8, 1)
+        self.fig, self.axes = plt.subplots(7, 1)
         self.fig.set_size_inches((8, 10))
         self.fig.tight_layout(h_pad=1, w_pad=1)
 
@@ -74,10 +74,8 @@ class Model1(ABCModel):
         if p: self.runner.append(PlotPipe(plot_indexes, ax[4], title='Rect correlator'))
         self.runner.append(ThresholdPipe(self.threshold))
         if p: self.runner.append(PlotPipe(plot_indexes, ax[5], title='Threshold'))
-        self.runner.append(CorrPipe('triangle', pulse_width=self.sampling_rate))
-        if p: self.runner.append(PlotPipe(plot_indexes, ax[6], title='Triangle correlator'))
-        self.runner.append(MaximumPipe(rate=self.sampling_rate))
-        if p: self.runner.append(PlotPipe(plot_indexes, ax[7], title='Maximum'))
+        self.runner.append(BestFitPipe(rate=self.sampling_rate))
+        if p: self.runner.append(PlotPipe(plot_indexes, ax[6], title='BestFitPipe'))
         self.runner.append(self.decoder)
 
     def run(self) -> ModelResult:

@@ -7,7 +7,7 @@ from .signal_pipe import Terminator
 from .correlator_pipe import CorrPipe
 from .filter_pipe import BandpassPipe
 from .threshold_pipe import ThresholdPipe
-from .maximum_pipe import MaximumPipe
+from .best_fit_pipe import BestFitPipe
 from .decode_pipe import DecodeSink
 
 __all__ = [
@@ -20,6 +20,6 @@ __all__ = [
     "CorrPipe",
     "BandpassPipe",
     "ThresholdPipe",
-    "MaximumPipe",
+    "BestFitPipe",
     "DecodeSink",
 ]

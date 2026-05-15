@@ -26,12 +26,12 @@ class SignalPipe(abc.ABC):
             self.output_queue = output_queue
 
     def connect_to(self, other: "SignalPipe"):
-        q = self.output_queue or other.input_queue or asyncio.Queue()
+        q = self.output_queue or other.input_queue or asyncio.Queue(maxsize=2)
         other.connect(q, None)
         self.connect(None, q)
 
     def connect_from(self, other: "SignalPipe"):
-        q = other.output_queue or self.input_queue or asyncio.Queue()
+        q = other.output_queue or self.input_queue or asyncio.Queue(maxsize=2)
         other.connect(None, q)
         self.connect(q, None)
 
