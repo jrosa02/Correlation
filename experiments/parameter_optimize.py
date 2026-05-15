@@ -2,7 +2,7 @@ import numpy as np
 import scipy.optimize
 from matplotlib import pyplot as plt
 
-from src import AWGN, BinPPMGen, SignalPipeRunner, UpSampler, CorrPipe, BandpassPipe, ThresholdPipe, MaximumPipe, DecodeSink
+from src import AWGN, BinPPMGen, SignalPipeRunner, UpSampler, CorrPipe, BandpassPipe, ThresholdPipe, BestFitPipe, DecodeSink
 from src.metrics import bit_error_rate, word_error_rate
 
 PPM_RANK = 1024
@@ -29,8 +29,7 @@ def cost(x):
         runner.append(BandpassPipe(low_filt, high_filt))
         runner.append(CorrPipe('rect', pulse_width=SAMPLING_RATE))
         runner.append(ThresholdPipe(threshold))
-        runner.append(CorrPipe('triangle', pulse_width=SAMPLING_RATE))
-        runner.append(MaximumPipe(rate=SAMPLING_RATE))
+        runner.append(BestFitPipe(rate=SAMPLING_RATE))
         decoder = DecodeSink(len(input_data), CHUNK_SIZE, PPM_RANK, SAMPLING_RATE)
         runner.append(decoder)
         runner.run()
