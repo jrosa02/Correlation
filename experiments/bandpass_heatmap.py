@@ -81,10 +81,10 @@ def _draw_row(fig, axes, data_2d, param_vals, param_name, noise_powers, raw_std,
     ax_line.grid(True, alpha=0.3)
 
     mean_std = raw_std.mean(axis=1)
-    ax_diag.barh(np.arange(n_params), mean_std, color='steelblue', alpha=0.7)
-    ax_diag.set_yticks(np.arange(n_params))
-    ax_diag.set_yticklabels([f'{v:.1e}' for v in param_vals], fontsize=6)
-    ax_diag.set_xlabel(f'mean std across\n{collapsed_axis}')
+    ax_diag.bar(np.arange(n_params), mean_std, color='steelblue', alpha=0.7)
+    ax_diag.set_xticks(np.arange(n_params))
+    ax_diag.set_xticklabels([f'{v:.1e}' for v in param_vals], rotation=90, fontsize=6)
+    ax_diag.set_ylabel(f'mean std across\n{collapsed_axis}')
     ax_diag.set_title(f'{collapsed_axis}\nvariance (noise floor)')
     ax_diag.grid(True, alpha=0.3)
 

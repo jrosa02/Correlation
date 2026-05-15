@@ -25,12 +25,12 @@ def _find_best_spike(signal, target_len):
                 diff = abs(run_len - target_len)
                 if diff < best_diff:
                     best_diff = diff
-                    best_pos = run_start
+                    best_pos = run_start + run_len // 2
         if in_run:
             run_len = n_cols - run_start
             diff = abs(run_len - target_len)
             if diff < best_diff:
-                best_pos = run_start
+                best_pos = run_start + run_len // 2
         offsets[r] = best_pos
     return offsets
 
