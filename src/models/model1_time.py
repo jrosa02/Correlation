@@ -2,11 +2,12 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from src import (
-    AWGN, BandpassPipe_Simple, BinPPMGen, CorrPipe_Simple, DecodeSink_Simple,
-    BestFitPipe_Simple, PlotPipe, SignalPipeRunner, ThresholdPipe, UpSampler_Simple,
+    AWGN, BandpassPipe_Timed, BinPPMGen, CorrPipe_Timed, DecodeSink_Timed,
+    BestFitPipe_Timed, PlotPipe, SignalPipeRunner, ThresholdPipe, UpSampler_Timed,
 )
 from src.metrics import bit_error_rate, per_bit_error_rate, word_error_rate
 from src.models.model import ABCModel, ModelResult
+from src.physical_units import Quantity
 
 
 class Model1(ABCModel):
@@ -15,11 +16,12 @@ class Model1(ABCModel):
         *,
         snr: float = 0.2,
         threshold: float = 0.3,
-        bandpass_low: float = 0.007,
-        bandpass_high: float = 0.99,
+        sample_rate: Quantity,
+        slot_rate: Quantity,
+        bandpass_low: Quantity,
+        bandpass_high: Quantity,
         chunk_size: int = 2048,
         ppm_rank: int = 1024,
-        sampling_rate: int = 32,
         n_symbols: int | None = None,
         seed: int = 42,
         plotting: bool = False,
@@ -27,11 +29,12 @@ class Model1(ABCModel):
         super().__init__(seed)
         self.snr = snr
         self.threshold = threshold
+        self.sample_rate = sample_rate
+        self.slot_rate = slot_rate
         self.bandpass_low = bandpass_low
         self.bandpass_high = bandpass_high
         self.chunk_size = chunk_size
         self.ppm_rank = ppm_rank
-        self.sampling_rate = sampling_rate
         self.plotting = plotting
 
         rng = np.random.default_rng(seed)
@@ -56,34 +59,38 @@ class Model1(ABCModel):
         plot_indexes = (0, 14)
         ax = self.axes
 
-        self.decoder = DecodeSink_Simple(
-            len(self.input_data), self.chunk_size, self.ppm_rank, self.sampling_rate
+        self.decoder = DecodeSink_Timed(
+            len(self.input_data), self.chunk_size, self.ppm_rank,
+            self.sample_rate, self.slot_rate,
         )
 
         p = ax is not None
+        samples_per_slot = round(self.sample_rate.to_hz() / self.slot_rate.to_hz())
 
         self.runner.append(BinPPMGen(self.input_data, self.chunk_size, self.ppm_rank))
         if p: self.runner.append(PlotPipe(plot_indexes, ax[0], 'bar', title='PPM symbols'))
-        self.runner.append(UpSampler_Simple(self.sampling_rate))
+        self.runner.append(UpSampler_Timed(self.sample_rate, self.slot_rate))
         if p: self.runner.append(PlotPipe(plot_indexes, ax[1], title='Upsampled'))
         self.runner.append(AWGN(self.snr))
         if p: self.runner.append(PlotPipe(plot_indexes, ax[2], title='AWGN'))
-        self.runner.append(BandpassPipe_Simple(self.bandpass_low, self.bandpass_high))
+        self.runner.append(BandpassPipe_Timed(self.bandpass_low, self.bandpass_high, self.sample_rate))
         if p: self.runner.append(PlotPipe(plot_indexes, ax[3], title='Bandpass'))
-        self.runner.append(CorrPipe_Simple('rect', pulse_width=self.sampling_rate))
+        self.runner.append(CorrPipe_Timed(self.sample_rate, self.slot_rate))
         if p: self.runner.append(PlotPipe(plot_indexes, ax[4], title='Rect correlator'))
         self.runner.append(ThresholdPipe(self.threshold))
         if p: self.runner.append(PlotPipe(plot_indexes, ax[5], title='Threshold'))
-        self.runner.append(BestFitPipe_Simple(rate=self.sampling_rate))
+        self.runner.append(BestFitPipe_Timed(self.sample_rate, self.slot_rate))
         if p: self.runner.append(PlotPipe(plot_indexes, ax[6], title='BestFitPipe'))
         self.runner.append(self.decoder)
+
+        self._samples_per_slot = samples_per_slot
 
     def run(self) -> ModelResult:
         self.runner.run()
 
         if self.axes is not None and self.fig is not None:
             self.axes[4].plot(
-                [0, self.ppm_rank * self.sampling_rate],
+                [0, self.ppm_rank * self._samples_per_slot],
                 [self.threshold, self.threshold],
                 "--r",
             )

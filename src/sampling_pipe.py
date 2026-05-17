@@ -3,6 +3,7 @@ from typing import Any, Literal
 import numpy as np
 from numba import njit, prange
 
+from src.physical_units import Quantity
 from src.signal_pipe import SignalPipe
 
 
@@ -15,7 +16,7 @@ def _repeat_upsample(signal, rate):
     return out
 
 
-class UpSampler(SignalPipe):
+class UpSampler_Simple(SignalPipe):
     def __init__(self, rate: int, method: Literal['repeat'] = 'repeat', seed: int = 42) -> None:
         super().__init__(seed)
         self.rate = rate
@@ -30,3 +31,18 @@ class UpSampler(SignalPipe):
 
     def reset(self) -> None:
         pass
+
+
+class UpSampler_Timed(UpSampler_Simple):
+    def __init__(
+        self,
+        sample_rate: Quantity,
+        slot_rate: Quantity,
+        method: Literal['repeat'] = 'repeat',
+        seed: int = 42,
+    ) -> None:
+        super().__init__(
+            rate=round(sample_rate.to_hz() / slot_rate.to_hz()),
+            method=method,
+            seed=seed,
+        )

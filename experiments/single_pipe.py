@@ -1,16 +1,18 @@
-from src.models.model1 import Model1
+from src.models.model1_time import Model1
+from src.physical_units import MHz, kHz, ns
 
 model = Model1(
-    snr=0.4,
+    snr=0.6,
     threshold=0.3,
-    bandpass_low=0.002,
-    bandpass_high=0.9,
+    sample_rate=1600 * MHz,
+    slot_rate=20 * ns,
+    bandpass_low=100 * kHz,     
+    bandpass_high=50 * MHz,    
     chunk_size=48,
-    ppm_rank=1024,
-    n_symbols=1<<16,
-    sampling_rate=32,
+    ppm_rank=1<<4,
+    n_symbols=1<<12,
     seed=42,
-    plotting=True
+    plotting=True,
 )
 
 result = model.run()

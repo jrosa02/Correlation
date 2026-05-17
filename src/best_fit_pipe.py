@@ -3,6 +3,7 @@ from typing import Any
 import numpy as np
 from numba import njit, prange
 
+from src.physical_units import Quantity
 from src.signal_pipe import SignalPipe
 
 
@@ -35,7 +36,7 @@ def _find_best_spike(signal, target_len):
     return offsets
 
 
-class BestFitPipe(SignalPipe):
+class BestFitPipe_Simple(SignalPipe):
     def __init__(self, rate: int, seed: int = 42) -> None:
         super().__init__(seed)
         self.rate = rate
@@ -49,3 +50,16 @@ class BestFitPipe(SignalPipe):
 
     def reset(self) -> None:
         pass
+
+
+class BestFitPipe_Timed(BestFitPipe_Simple):
+    def __init__(
+        self,
+        sample_rate: Quantity,
+        slot_rate: Quantity,
+        seed: int = 42,
+    ) -> None:
+        super().__init__(
+            rate=round(sample_rate.to_hz() / slot_rate.to_hz()),
+            seed=seed,
+        )

@@ -3,10 +3,13 @@ from typing import Any
 import numpy as np
 from numpy import dtype, ndarray
 
+from src.physical_units import Quantity
 from src.signal_pipe import SignalPipe
 
 
-class DecodeSink(SignalPipe):
+class DecodeSink_Simple(SignalPipe):
+    DOWNSAMPLE_BIAS: float = 0.8
+
     def __init__(self, data_len: int, chunk_size: int, n_slots: int, sampling_rate: float, seed: int = 42) -> None:
         super().__init__(seed)
         self.n_slots = n_slots
@@ -21,7 +24,7 @@ class DecodeSink(SignalPipe):
         return np.argmax(rows, axis=1)
 
     def downsample(self, offsets: np.ndarray) -> np.ndarray:
-        return np.round(offsets / self.sampling_rate -0.3).astype(np.int64)
+        return np.floor(offsets / self.sampling_rate).astype(np.int64)
 
     def consume(self, signal: ndarray[tuple[Any, ...], dtype[Any]]):
         offsets = self.retrieve_offsets(signal)
@@ -32,6 +35,25 @@ class DecodeSink(SignalPipe):
     @property
     def get_data(self):
         return self.data.copy()
-    
+
     def reset(self) -> None:
-        self._index = 0    
+        self._index = 0
+
+
+class DecodeSink_Timed(DecodeSink_Simple):
+    def __init__(
+        self,
+        data_len: int,
+        chunk_size: int,
+        n_slots: int,
+        sample_rate: Quantity,
+        slot_rate: Quantity,
+        seed: int = 42,
+    ) -> None:
+        super().__init__(
+            data_len=data_len,
+            chunk_size=chunk_size,
+            n_slots=n_slots,
+            sampling_rate=sample_rate.to_hz() / slot_rate.to_hz(),
+            seed=seed,
+        )
