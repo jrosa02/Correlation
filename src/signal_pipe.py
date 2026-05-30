@@ -79,7 +79,41 @@ class SignalPipe(abc.ABC):
     @abc.abstractmethod
     def reset(self) -> None:
         pass
-    
+
+class CompoundPipe(SignalPipe):
+    def __init__(self, pipes: list[SignalPipe], seed: int = 42) -> None:
+        super().__init__(seed=seed)
+        self.pipes = pipes
+
+        for pipe in self.pipes:
+            pipe.set_seed(seed)
+
+        for i in range(len(self.pipes) - 1):
+            self.pipes[i].connect_to(self.pipes[i + 1])
+
+    def connect(self, input_queue: asyncio.Queue|None, output_queue: asyncio.Queue|None):
+        super().connect(input_queue, output_queue)
+        if input_queue and self.pipes:
+            self.pipes[0].input_queue = input_queue
+        if output_queue and self.pipes:
+            self.pipes[-1].output_queue = output_queue
+
+    async def run(self):
+        await asyncio.gather(*[pipe.run() for pipe in self.pipes])
+
+    def reset(self) -> None:
+        for pipe in self.pipes:
+            pipe.reset()
+
+    def process(self, signal: np.ndarray) -> np.ndarray:
+        raise NotImplementedError("CompoundPipe uses async queue-based run(), not process()")
+
+    def generate(self) -> np.ndarray | None:
+        raise NotImplementedError("CompoundPipe uses async queue-based run(), not generate()")
+
+    def consume(self, signal: np.ndarray) -> None:
+        raise NotImplementedError("CompoundPipe uses async queue-based run(), not consume()")
+
 class Terminator(SignalPipe):
     def consume(self, signal: np.ndarray[tuple[Any, ...], np.dtype[Any]]):
         return
