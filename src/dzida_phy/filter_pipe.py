@@ -56,7 +56,9 @@ class LowpassPipe_Simple(SignalPipe):
         self.order = order
 
     def lowpass_filter(self, sig: np.ndarray) -> np.ndarray:
-        sos = sp.butter(self.order, self.cutoff, btype="low", output="sos")
+        # Clamp cutoff to valid range (0, 1) for safety
+        cutoff = max(0.0001, min(0.9999, float(self.cutoff)))
+        sos = sp.butter(self.order, cutoff, btype="low", output="sos")
         filtered = sp.sosfilt(sos, sig)
         assert isinstance(filtered, np.ndarray)
         return filtered

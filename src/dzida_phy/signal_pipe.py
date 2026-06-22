@@ -81,9 +81,9 @@ class SignalPipe(abc.ABC):
         pass
 
 class CompoundPipe(SignalPipe):
-    def __init__(self, pipes: list[SignalPipe], seed: int = 42) -> None:
+    def __init__(self, pipes: list[SignalPipe | None], seed: int = 42) -> None:
         super().__init__(seed=seed)
-        self.pipes = pipes
+        self.pipes = [p for p in pipes if p is not None]
 
         for pipe in self.pipes:
             pipe.set_seed(seed)

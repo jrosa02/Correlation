@@ -1,13 +1,13 @@
-from dzida_phy.models.model1_time import Model1
-from dzida_phy.physical_units import MHz, kHz, ns
+from dzida_phy.models.phy_model import PhyModel
+from dzida_phy.physical_units import MHz, kHz, ns, s
 
-model = Model1(
-    snr=0.6,
+model = PhyModel(
+    # snr=0.6,
     threshold=0.3,
-    sample_rate=1600 * MHz,
-    slot_rate=20 * ns,
+    sample_rate= 1600 * MHz,
+    slot_rate= 40 * ns,
     bandpass_low=100 * kHz,     
-    bandpass_high=50 * MHz,    
+    bandpass_high=100 * MHz,    
     chunk_size=48,
     ppm_rank=1<<4,
     n_symbols=1<<12,

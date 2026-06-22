@@ -1,18 +1,32 @@
 import asyncio
 from typing import Any
 import numpy as np
+from numba import njit
 
 from dzida_phy.signal_pipe import SignalPipe
+from dzida_phy.plot_pipe import PlotPipe
+
+
+@njit
+def _batch_symbols_numba(indices: np.ndarray, n_slots: int) -> np.ndarray:
+    """Numba-compiled batch symbol creation: O(n) vs O(n²) with fancy indexing."""
+    n_symbols = len(indices)
+    arr = np.zeros((n_symbols, n_slots), dtype=np.uint8)
+    for i in range(n_symbols):
+        arr[i, indices[i]] = 1
+    return arr
+
 
 class BinPPMSymbol(np.ndarray):
-    def __new__(cls, size:int, index:int):
-        """Create a new BinaryPPMSymbol"""
-        obj = np.asarray(np.zeros(size, dtype=bool)).view(cls)
-        obj[index] = True
+    def __new__(cls, size: int, index: int):
+        """Create binary PPM symbol. Optimized: direct allocation, uint8 dtype."""
+        obj = np.zeros(size, dtype=np.uint8).view(cls)
+        obj[index] = 1
         return obj
 
+
 class BinPPMGen(SignalPipe):
-    def __init__(self, indices: np.ndarray, chunk_size: int, n_slots: int, seed: int|None = None):
+    def __init__(self, indices: np.ndarray, chunk_size: int, n_slots: int, seed: int = 42):
         super().__init__(seed)
         self.indices = indices
         self.chunk_size = chunk_size
@@ -21,11 +35,10 @@ class BinPPMGen(SignalPipe):
 
     def random(self, n_slots: int) -> BinPPMSymbol:
         return BinPPMSymbol(n_slots, int(self.rng.integers(0, n_slots)))
-    
+
     def from_indices(self, n_slots: int, indices: np.ndarray) -> np.ndarray:
-        arr = np.zeros((len(indices), n_slots+1), dtype=bool)
-        arr[np.arange(len(indices)), indices] = True
-        return arr
+        """Vectorized batch creation via numba. Use uint8 instead of bool."""
+        return _batch_symbols_numba(indices.astype(np.int64), n_slots)
     
     def random_array(self, n_symbols, n_slots):
         """Efficient - vectorized array creation with object wrapper"""

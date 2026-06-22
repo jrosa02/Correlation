@@ -12,10 +12,10 @@ def _add_noise(signal, std, rng):
 
 
 class AWGN(SignalPipe):
-    def __init__(self, noise_power, seed: int = 42) -> None:
+    def __init__(self, linear_noise_power, seed: int = 42) -> None:
         super().__init__(seed)
-        self.noise_power = noise_power
-        self.std = np.sqrt(noise_power)
+        self.noise_power = linear_noise_power
+        self.std = np.sqrt(linear_noise_power)
 
     def add_noise(self, signal: np.ndarray) -> np.ndarray:
         return _add_noise(signal, self.std, self.rng)

@@ -9,6 +9,12 @@ class Quantity:
     def to_s(self) -> float:
         return 1.0 / self._hz
 
+    def __float__(self) -> float:
+        return self._hz
+
+    def __index__(self) -> int:
+        return int(self._hz)
+
 
 class _FreqUnit:
     """Frequency unit. 50 * MHz → Quantity(50e6 Hz)."""

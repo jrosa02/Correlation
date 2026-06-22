@@ -1,5 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
+from typing import cast
 
 from dzida_phy import (
     AWGN, BandpassPipe_Simple, BinPPMGen, CorrPipe_Simple, DecodeSink_Simple,
@@ -7,6 +9,7 @@ from dzida_phy import (
 )
 from dzida_phy.metrics import bit_error_rate, per_bit_error_rate, word_error_rate
 from dzida_phy.models.model import ABCModel, ModelResult
+from dzida_phy.plot_pipe import PlotInputFactory
 
 
 class Model1(ABCModel):
@@ -53,7 +56,6 @@ class Model1(ABCModel):
         self.fig.tight_layout(h_pad=1, w_pad=1)
 
     def construct_pipeline(self) -> None:
-        plot_indexes = (0, 14)
         ax = self.axes
 
         self.decoder = DecodeSink_Simple(
@@ -61,21 +63,25 @@ class Model1(ABCModel):
         )
 
         p = ax is not None
+        factory: PlotInputFactory | None = None
+        if p:
+            factory = PlotInputFactory(axs=cast(list[Axes], [None] + list(ax)), indxs=(0, 14))
+            assert factory is not None
 
         self.runner.append(BinPPMGen(self.input_data, self.chunk_size, self.ppm_rank))
-        if p: self.runner.append(PlotPipe(plot_indexes, ax[0], 'bar', title='PPM symbols'))
+        if p: self.runner.append(PlotPipe(factory(), 'bar', title='PPM symbols'))
         self.runner.append(UpSampler_Simple(self.sampling_rate))
-        if p: self.runner.append(PlotPipe(plot_indexes, ax[1], title='Upsampled'))
+        if p: self.runner.append(PlotPipe(factory(), title='Upsampled'))
         self.runner.append(AWGN(self.snr))
-        if p: self.runner.append(PlotPipe(plot_indexes, ax[2], title='AWGN'))
+        if p: self.runner.append(PlotPipe(factory(), title='AWGN'))
         self.runner.append(BandpassPipe_Simple(self.bandpass_low, self.bandpass_high))
-        if p: self.runner.append(PlotPipe(plot_indexes, ax[3], title='Bandpass'))
+        if p: self.runner.append(PlotPipe(factory(), title='Bandpass'))
         self.runner.append(CorrPipe_Simple('rect', pulse_width=self.sampling_rate))
-        if p: self.runner.append(PlotPipe(plot_indexes, ax[4], title='Rect correlator'))
+        if p: self.runner.append(PlotPipe(factory(), title='Rect correlator'))
         self.runner.append(ThresholdPipe(self.threshold))
-        if p: self.runner.append(PlotPipe(plot_indexes, ax[5], title='Threshold'))
+        if p: self.runner.append(PlotPipe(factory(), title='Threshold'))
         self.runner.append(BestFitPipe_Simple(rate=self.sampling_rate))
-        if p: self.runner.append(PlotPipe(plot_indexes, ax[6], title='BestFitPipe'))
+        if p: self.runner.append(PlotPipe(factory(), title='BestFitPipe'))
         self.runner.append(self.decoder)
 
     def run(self) -> ModelResult:
