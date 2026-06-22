@@ -4,7 +4,7 @@ import numpy as np
 from numpy import dtype, ndarray
 from numba import vectorize
 
-from src.signal_pipe import SignalPipe
+from dzida_phy.signal_pipe import SignalPipe
 
 
 @vectorize(['b1(f8, f8)'], target='parallel', cache=True)

@@ -1,7 +1,7 @@
 import pytest
 
-from src.physical_units import Quantity, MHz, kHz, Hz, ns, us, ms, s
-from src import (
+from dzida_phy.physical_units import Quantity, MHz, kHz, Hz, ns, us, ms, s
+from dzida_phy import (
     BandpassPipe_Simple, BandpassPipe_Timed,
     UpSampler_Simple, UpSampler_Timed,
     CorrPipe_Simple, CorrPipe_Timed,

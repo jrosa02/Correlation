@@ -2,7 +2,7 @@ import asyncio
 from typing import Any
 import numpy as np
 
-from src.signal_pipe import SignalPipe
+from dzida_phy.signal_pipe import SignalPipe
 
 class BinPPMSymbol(np.ndarray):
     def __new__(cls, size:int, index:int):

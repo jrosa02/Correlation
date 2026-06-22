@@ -3,9 +3,9 @@ from typing import Any, Literal
 import numpy as np
 from numpy import dtype, ndarray
 
-from src.native_optimized import correlate
-from src.physical_units import Quantity
-from src.signal_pipe import SignalPipe
+from dzida_phy.native_optimized import correlate
+from dzida_phy.physical_units import Quantity
+from dzida_phy.signal_pipe import SignalPipe
 
 _REF_TYPE = {'rect': 0, 'triangle': 1}
 

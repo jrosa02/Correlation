@@ -5,7 +5,7 @@ from typing import Any, Literal
 from matplotlib.axes import Axes
 from numpy import dtype, ndarray
 
-from src.signal_pipe import SignalPipe
+from dzida_phy.signal_pipe import SignalPipe
 from matplotlib import pyplot as plt
 
 

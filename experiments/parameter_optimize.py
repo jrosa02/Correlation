@@ -3,7 +3,7 @@ import scipy.optimize
 from matplotlib import pyplot as plt
 
 from src import AWGN, BinPPMGen, SignalPipeRunner, UpSampler, CorrPipe, BandpassPipe, ThresholdPipe, BestFitPipe, DecodeSink
-from src.metrics import bit_error_rate, word_error_rate
+from dzida_phy.metrics import bit_error_rate, word_error_rate
 
 PPM_RANK = 1024
 CHUNK_SIZE = 64

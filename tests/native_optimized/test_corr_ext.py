@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from src.native_optimized import corr_ext
+from dzida_phy.native_optimized import corr_ext
 
 PULSE_WIDTHS = [4, 8, 16, 32, 64]
 RNG = np.random.default_rng(0)

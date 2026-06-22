@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from src.runner_pipe import SignalPipeRunner
+from dzida_phy.runner_pipe import SignalPipeRunner
 
 
 @dataclass

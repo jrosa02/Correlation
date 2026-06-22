@@ -10,7 +10,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import PowerNorm
 
-from src.models.model1 import Model1
+from dzida_phy.models.model1 import Model1
 
 
 seed = 42

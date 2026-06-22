@@ -4,8 +4,8 @@ import numpy as np
 from numpy import dtype, ndarray
 from scipy import signal as sp
 
-from src.physical_units import Quantity
-from src.signal_pipe import SignalPipe
+from dzida_phy.physical_units import Quantity
+from dzida_phy.signal_pipe import SignalPipe
 
 
 class BandpassPipe_Simple(SignalPipe):

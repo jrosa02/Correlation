@@ -3,7 +3,7 @@ from typing import Any
 import numpy as np
 from numba import njit
 
-from src.signal_pipe import SignalPipe
+from dzida_phy.signal_pipe import SignalPipe
 
 
 @njit(cache=True, fastmath=True, nogil=True, parallel=True)

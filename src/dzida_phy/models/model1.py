@@ -1,12 +1,12 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from src import (
+from dzida_phy import (
     AWGN, BandpassPipe_Simple, BinPPMGen, CorrPipe_Simple, DecodeSink_Simple,
     BestFitPipe_Simple, PlotPipe, SignalPipeRunner, ThresholdPipe, UpSampler_Simple,
 )
-from src.metrics import bit_error_rate, per_bit_error_rate, word_error_rate
-from src.models.model import ABCModel, ModelResult
+from dzida_phy.metrics import bit_error_rate, per_bit_error_rate, word_error_rate
+from dzida_phy.models.model import ABCModel, ModelResult
 
 
 class Model1(ABCModel):

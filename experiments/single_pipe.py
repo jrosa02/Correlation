@@ -1,5 +1,5 @@
-from src.models.model1_time import Model1
-from src.physical_units import MHz, kHz, ns
+from dzida_phy.models.model1_time import Model1
+from dzida_phy.physical_units import MHz, kHz, ns
 
 model = Model1(
     snr=0.6,

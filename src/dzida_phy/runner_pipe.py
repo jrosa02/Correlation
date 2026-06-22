@@ -3,7 +3,7 @@ from typing import Any, Coroutine, Literal
 
 import numpy as np
 
-from src.signal_pipe import SignalPipe
+from dzida_phy.signal_pipe import SignalPipe
 
 
 class SignalPipeRunner():

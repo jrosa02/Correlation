@@ -3,8 +3,8 @@ import numpy as np
 
 setup(
     ext_modules=[Extension(
-        name='src.native_optimized.corr_ext',
-        sources=['src/native_optimized/corr_ext.cpp'],
+        name='dzida_phy.native_optimized.corr_ext',
+        sources=['src/dzida_phy/native_optimized/corr_ext.cpp'],
         include_dirs=[np.get_include()],
         extra_compile_args=[
             '-O3',
@@ -16,4 +16,4 @@ setup(
         ],
     )]
 )
-# compile: uv run python setup.py build_ext --build-lib .
+# compile: uv run python setup.py build_ext --build-lib src
