@@ -1,4 +1,5 @@
 from .noise_pipe import AWGN
+from .quantization_pipe import QuantizatorPipe
 from .plot_pipe import PlotPipe
 from .ppmbin_pipe import BinPPMGen
 from .runner_pipe import SignalPipeRunner
@@ -8,10 +9,11 @@ from .correlator_pipe import CorrPipe_Simple, CorrPipe_Timed
 from .filter_pipe import BandpassPipe_Simple, BandpassPipe_Timed
 from .threshold_pipe import ThresholdPipe
 from .best_fit_pipe import BestFitPipe_Simple, BestFitPipe_Timed
-from .decode_pipe import DecodeSink_Simple, DecodeSink_Timed
+from .decode_pipe import DecodeSink_Simple, DecodeSink_Timed, DecodePlotSink_Timed
 
 __all__ = [
     "AWGN",
+    "QuantizatorPipe",
     "PlotPipe",
     "BinPPMGen",
     "SignalPipeRunner",
@@ -27,4 +29,5 @@ __all__ = [
     "BestFitPipe_Timed",
     "DecodeSink_Simple",
     "DecodeSink_Timed",
+    "DecodePlotSink_Timed",
 ]

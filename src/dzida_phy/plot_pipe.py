@@ -81,7 +81,8 @@ class PlotPipe(SignalPipe):
             case 'plot':
                 self.ax.plot(x_axis, signal_values, label=f"Signal at {self._plot_indexes}")
             case 'bar':
-                self.ax.bar(x_axis, signal_values, label=f"Signal at {self._plot_indexes}")
+                width = (x_axis[1] - x_axis[0]) * 0.8 if len(x_axis) > 1 else 0.8
+                self.ax.bar(x_axis, signal_values, width=width, label=f"Signal at {self._plot_indexes}")
         self.ax.set_xlabel(x_label)
         self.ax.grid(True)
 

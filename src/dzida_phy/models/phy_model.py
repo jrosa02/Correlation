@@ -4,9 +4,10 @@ from matplotlib.axes import Axes
 from typing import cast
 
 from dzida_phy import (
-    BinPPMGen, CorrPipe_Timed, DecodeSink_Timed,
+    BinPPMGen, CorrPipe_Timed, DecodePlotSink_Timed,
     BestFitPipe_Timed, PlotPipe, ThresholdPipe,
 )
+from dzida_phy.physical.adc import LTC6268
 from dzida_phy.signal_pipe import CompoundPipe
 from dzida_phy.physical.diode import DiodePipe, CVLL_350_9
 from dzida_phy.physical.detector import DET08CL, DetectorPipe
@@ -94,36 +95,41 @@ class PhyModel(ABCModel):
         return p_rx_w
 
     def _init_figure(self) -> None:
-        self.fig, self.axes = plt.subplots(7, 1)
+        self.fig, self.axes = plt.subplots(8, 1)
         self.fig.set_size_inches((8, 10))
         self.fig.tight_layout(h_pad=1, w_pad=1)
 
     def construct_pipeline(self) -> None:
         ax = self.axes
 
-        self.decoder = DecodeSink_Timed(
-            len(self.input_data), self.chunk_size, self.ppm_rank,
-            self.sample_rate, self.slot_rate,
-        )
-
         p = ax is not None
         samples_per_slot = round(self.sample_rate.to_hz() / self.slot_rate.to_hz())
 
         # Build processing pipeline using physical components via CompoundPipe
-        factory = PlotInputFactory(axs=cast(list[Axes], [None] + list(ax)), indxs=(0, 14))
+        factory = PlotInputFactory(axs=cast(list[Axes], [None] + list(ax)) if ax is not None else [], indxs=(0, 14))
+
+        
+
         pipes = [
             BinPPMGen(self.input_data, self.chunk_size, self.ppm_rank),
-            PlotPipe(factory(), 'bar', title='PPM symbols', sample_rate=self.sample_rate),
+            PlotPipe(factory(), 'bar', title='PPM symbols'),
             CVLL_350_9(self.sample_rate, self.slot_rate, plot_input=factory()),
-            DET08CL(self.sample_rate, self.bandpass_high, self.signal_power, plot_input=factory()),
+            DET08CL(self.sample_rate, Quantity(self.slot_rate.to_hz()*2), self.signal_power, plot_input=factory()),
+            LTC6268(self.sample_rate, self.sample_rate, 0, plot_input=factory()),
             CorrPipe_Timed(self.sample_rate, self.slot_rate),
-            PlotPipe(factory(), title='Rect correlator', sample_rate=self.sample_rate),
+            PlotPipe(factory(), title='Rect correlator | FPGA', sample_rate=self.sample_rate),
             ThresholdPipe(self.threshold),
-            PlotPipe(factory(), title='Threshold', sample_rate=self.sample_rate),
+            PlotPipe(factory(), title='Threshold | FPGA', sample_rate=self.sample_rate),
             BestFitPipe_Timed(self.sample_rate, self.slot_rate),
-            PlotPipe(factory(), title='BestFitPipe', sample_rate=self.sample_rate),
-            self.decoder,
+            PlotPipe(factory(), title='BestFitPipe | FPGA', sample_rate=self.sample_rate),
+            DecodePlotSink_Timed(
+            len(self.input_data), self.chunk_size, self.ppm_rank,
+            self.sample_rate, self.slot_rate,
+            plot_input=factory() if p else None,
+        )
         ]
+
+        self.decoder = pipes[-1]
 
         self.runner.append(CompoundPipe(pipes))
         self._samples_per_slot = samples_per_slot
@@ -156,4 +162,4 @@ class PhyModel(ABCModel):
     def save_plot(self, path: str) -> None:
         if self.fig is None:
             raise RuntimeError("plotting=False, no figure to save")
-        self.fig.savefig(path)
+        self.fig.savefig(path, dpi=800)

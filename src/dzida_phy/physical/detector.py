@@ -76,7 +76,7 @@ class DET08CL(DetectorPipe):
         super().__init__(resolution, band, noise_to_signal, plot_input, seed)
 
         if self.plotpipe is not None:
-            title = (f"DET08CL (R_L={load_resistance/1e3:.0f}kΩ) - "
+            title = (f"DET08CL | Photodiode - (R_L={load_resistance/1e3:.0f}kΩ), "
                     f"P_in:{signal_power:.2e}W, f_BW:{f_bw/1e6:.1f}MHz, "
-                    f"SNR:{snr_db:.1f}dB")
+                    f"SNR:{snr_db:.3f}dB")
             self.plotpipe.ax.set_title(title)
