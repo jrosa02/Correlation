@@ -5,7 +5,8 @@ from numpy import dtype, ndarray
 from scipy import signal as sp
 
 from dzida_phy.physical_units import Quantity
-from dzida_phy.signal_pipe import SignalPipe
+from dzida_phy.signal_pipe import SignalPipe, CompoundPipe
+from dzida_phy.plot_pipe import PlotPipe, PlotInput
 
 
 class BandpassPipe_Simple(SignalPipe):
@@ -122,3 +123,34 @@ class HighpassPipe_Timed(HighpassPipe_Simple):
             order=order,
             seed=seed,
         )
+
+
+class HighpassModule_Timed(CompoundPipe):
+    def __init__(self, highpass_cutoff: Quantity, sample_rate: Quantity, plot_input: PlotInput | None = None,
+                 order: int = 4, seed: int = 42) -> None:
+        filt     = HighpassPipe_Timed(highpass_cutoff, sample_rate, order, seed)
+        highpass_cutoff.set_repr('freq')
+        plotpipe = PlotPipe(plot_input, title=f"Highpass - Cufoff: {highpass_cutoff}", sample_rate=sample_rate) if plot_input else None
+        super().__init__([filt, plotpipe], seed)
+
+
+class LowpassModule_Timed(CompoundPipe):
+    def __init__(self, lowpass_cutoff: Quantity, sample_rate: Quantity,
+                 plot_input: PlotInput | None = None,
+                 order: int = 4, seed: int = 42) -> None:
+        filt     = LowpassPipe_Timed(lowpass_cutoff, sample_rate, order, seed)
+        lowpass_cutoff.set_repr('freq')
+        plotpipe = PlotPipe(plot_input, title=f"Lowpass - Cutoff: {lowpass_cutoff}", sample_rate=sample_rate) if plot_input else None
+        super().__init__([filt, plotpipe], seed)
+
+
+class BandpassModule_Timed(CompoundPipe):
+    def __init__(self, bandpass_low: Quantity, bandpass_high: Quantity,
+                 sample_rate: Quantity,
+                 plot_input: PlotInput | None = None,
+                 order: int = 4, seed: int = 42) -> None:
+        filt     = BandpassPipe_Timed(bandpass_low, bandpass_high, sample_rate, order, seed)
+        bandpass_low.set_repr('freq')
+        bandpass_high.set_repr('freq')
+        plotpipe = PlotPipe(plot_input, title=f"Bandpass - {bandpass_low} / {bandpass_high}", sample_rate=sample_rate) if plot_input else None
+        super().__init__([filt, plotpipe], seed)

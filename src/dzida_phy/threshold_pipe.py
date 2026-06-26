@@ -4,7 +4,9 @@ import numpy as np
 from numpy import dtype, ndarray
 from numba import vectorize
 
-from dzida_phy.signal_pipe import SignalPipe
+from dzida_phy.signal_pipe import SignalPipe, CompoundPipe
+from dzida_phy.plot_pipe import PlotPipe, PlotInput
+from dzida_phy.physical_units import Quantity
 
 
 @vectorize(['b1(f8, f8)'], target='parallel', cache=True)
@@ -22,4 +24,22 @@ class ThresholdPipe(SignalPipe):
 
     def reset(self) -> None:
         pass
+
+
+class ThresholdModule(CompoundPipe):
+    def __init__(self, threshold: float, sample_rate: Quantity,
+                 plot_input: PlotInput | None = None, seed: int = 42) -> None:
+        self._threshold = threshold
+        self._ax = plot_input.ax if plot_input else None
+        pre_plot  = PlotPipe(plot_input, title='Threshold | FPGA',
+                             sample_rate=sample_rate, plot_kwargs={'alpha': 0.6, 'color': 'green'}) if plot_input else None
+        post_plot = PlotPipe(plot_input, sample_rate=sample_rate, plot_kwargs={'alpha': 0.6, 'color': 'blue'}) if plot_input else None
+        if pre_plot is not None:
+            pre_plot.ax.axhline(threshold, color='orange', linestyle='--', label=f'thr={threshold}', alpha=0.8)
+        super().__init__([pre_plot, ThresholdPipe(threshold, seed), post_plot], seed)
+
+    def reset(self) -> None:
+        super().reset()
+        if self._ax is not None:
+            self._ax.axhline(self._threshold, color='orange', linestyle='--', label=f'thr={self._threshold}')
 

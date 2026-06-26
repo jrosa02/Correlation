@@ -6,8 +6,9 @@ from .runner_pipe import SignalPipeRunner
 from .sampling_pipe import UpSampler_Simple, UpSampler_Timed
 from .signal_pipe import Terminator
 from .correlator_pipe import CorrPipe_Simple, CorrPipe_Timed
-from .filter_pipe import BandpassPipe_Simple, BandpassPipe_Timed, HighpassPipe_Timed
-from .threshold_pipe import ThresholdPipe
+from .filter_pipe import (BandpassPipe_Simple, BandpassPipe_Timed, HighpassPipe_Timed,
+                          HighpassModule_Timed, LowpassModule_Timed, BandpassModule_Timed)
+from .threshold_pipe import ThresholdPipe, ThresholdModule
 from .best_fit_pipe import BestFitPipe_Simple, BestFitPipe_Timed
 from .decode_pipe import DecodeSink_Simple, DecodeSink_Timed, DecodePlotSink_Timed
 
@@ -26,7 +27,11 @@ __all__ = [
     "BandpassPipe_Simple",
     "BandpassPipe_Timed",
     "HighpassPipe_Timed",
+    "HighpassModule_Timed",
+    "LowpassModule_Timed",
+    "BandpassModule_Timed",
     "ThresholdPipe",
+    "ThresholdModule",
     "BestFitPipe_Simple",
     "BestFitPipe_Timed",
     "DecodeSink_Simple",

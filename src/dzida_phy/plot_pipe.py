@@ -38,6 +38,7 @@ class PlotPipe(SignalPipe):
         plot_type: Literal['plot', 'bar'] = 'plot',
         title: str | None = None,
         sample_rate: Quantity | None = None,
+        plot_kwargs: dict | None = None,
         seed: int = 42,
     ) -> None:
         super().__init__(seed)
@@ -45,6 +46,7 @@ class PlotPipe(SignalPipe):
         self._plot_indexes = plt_in.indxs
         self.ax = plt_in.ax
         self.type = plot_type
+        self.plot_kwargs = plot_kwargs or {}
         if title:
             self.ax.set_title(title)
 
@@ -79,10 +81,12 @@ class PlotPipe(SignalPipe):
 
         match self.type:
             case 'plot':
-                self.ax.plot(x_axis, signal_values, label=f"Signal at {self._plot_indexes}")
+                self.ax.plot(x_axis, signal_values,
+                             **{'label': f"Signal at {self._plot_indexes}", **self.plot_kwargs})
             case 'bar':
                 width = (x_axis[1] - x_axis[0]) * 0.8 if len(x_axis) > 1 else 0.8
-                self.ax.bar(x_axis, signal_values, width=width, label=f"Signal at {self._plot_indexes}")
+                self.ax.bar(x_axis, signal_values,
+                            **{'width': width, 'label': f"Signal at {self._plot_indexes}", **self.plot_kwargs})
         self.ax.set_xlabel(x_label)
         self.ax.grid(True)
 

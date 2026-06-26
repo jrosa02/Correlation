@@ -4,11 +4,11 @@ from dzida_phy.physical_units import MHz, kHz, ns, s
 model = PhyModel(
     threshold = 0.3,
     sample_rate = 0.5 * ns,
-    slot_rate = 32 * ns,
+    slot_rate = 64 * ns,
     bandpass_low = 10 * kHz,
     bandpass_high = 1000 * MHz,
     chunk_size = 48,
-    ppm_rank = 1<<5,
+    ppm_rank = 1<<10,
     n_symbols = 1<<10,
     seed = 42,
     plotting = True,

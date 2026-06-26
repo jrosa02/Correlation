@@ -5,7 +5,7 @@ from typing import cast
 
 from dzida_phy import (
     BinPPMGen, CorrPipe_Timed, DecodePlotSink_Timed,
-    BestFitPipe_Timed, PlotPipe, ThresholdPipe, HighpassPipe_Timed,
+    BestFitPipe_Timed, PlotPipe, ThresholdModule, HighpassModule_Timed,
 )
 from dzida_phy.physical.adc import HMCAD1511
 from dzida_phy.signal_pipe import CompoundPipe
@@ -96,7 +96,7 @@ class PhyModel(ABCModel):
 
     def _init_figure(self) -> None:
         self.fig, self.axes = plt.subplots(9, 1)
-        self.fig.set_size_inches((8, 10))
+        self.fig.set_size_inches((16, 20))
         self.fig.tight_layout(h_pad=1, w_pad=1)
 
     def construct_pipeline(self) -> None:
@@ -112,13 +112,12 @@ class PhyModel(ABCModel):
             PlotPipe(factory(), 'bar', title='PPM symbols'),
             CVLL_350_9(self.sample_rate, self.slot_rate, plot_input=factory()),
             DET08CL(self.sample_rate, Quantity(self.slot_rate.to_hz()*2), self.signal_power, plot_input=factory()),
-            HighpassPipe_Timed(Quantity(self.slot_rate.to_hz() / 10), self.sample_rate),
-            PlotPipe(factory(), title='Highpass | DC drift removal', sample_rate=self.sample_rate),
+            HighpassModule_Timed(Quantity(self.slot_rate.to_hz()/20), self.sample_rate,
+                                 plot_input=factory()),
             HMCAD1511(self.sample_rate, self.sample_rate, plot_input=factory()),
             CorrPipe_Timed(self.sample_rate, self.slot_rate),
             PlotPipe(factory(), title='Rect correlator | FPGA', sample_rate=self.sample_rate),
-            ThresholdPipe(self.threshold),
-            PlotPipe(factory(), title='Threshold | FPGA', sample_rate=self.sample_rate),
+            ThresholdModule(self.threshold, self.sample_rate, plot_input=factory()),
             BestFitPipe_Timed(self.sample_rate, self.slot_rate),
             PlotPipe(factory(), title='BestFitPipe | FPGA', sample_rate=self.sample_rate),
             DecodePlotSink_Timed(
@@ -137,14 +136,6 @@ class PhyModel(ABCModel):
         self.runner.run()
 
         if self.axes is not None and self.fig is not None:
-            # Convert sample-space x-axis to time using Quantity
-            time_per_sample = self.sample_rate.to_s()
-            max_time = self.ppm_rank * self._samples_per_slot * time_per_sample
-            self.axes[4].plot(
-                [0, max_time],
-                [self.threshold, self.threshold],
-                "--r",
-            )
             self.fig.tight_layout(h_pad=1, w_pad=1)
 
         decoded = self.decoder.decoded_data
