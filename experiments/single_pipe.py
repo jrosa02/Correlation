@@ -2,17 +2,16 @@ from dzida_phy.models.phy_model import PhyModel
 from dzida_phy.physical_units import MHz, kHz, ns, s
 
 model = PhyModel(
-    # snr=0.6,
-    threshold=0.3,
-    sample_rate= 0.5 * ns,
-    slot_rate= 32 * ns,
-    bandpass_low=100 * kHz,     
-    bandpass_high=100 * MHz,    
-    chunk_size=48,
-    ppm_rank=1<<10,
-    n_symbols=1<<12,
-    seed=42,
-    plotting=True,
+    threshold = 0.3,
+    sample_rate = 0.5 * ns,
+    slot_rate = 32 * ns,
+    bandpass_low = 10 * kHz,
+    bandpass_high = 1000 * MHz,
+    chunk_size = 48,
+    ppm_rank = 1<<5,
+    n_symbols = 1<<10,
+    seed = 42,
+    plotting = True,
 )
 
 result = model.run()

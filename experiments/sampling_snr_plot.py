@@ -46,7 +46,8 @@ if __name__ == "__main__":
     ]
 
     try:
-        with ProcessPoolExecutor(max_workers=min(len(tasks), os.cpu_count())) as executor:
+        mp_ctx = multiprocessing.get_context('spawn')
+        with ProcessPoolExecutor(max_workers=min(len(tasks), os.cpu_count()), mp_context=mp_ctx) as executor:
             futures = {executor.submit(run_cell, t): t for t in tasks}
             for f in as_completed(futures):
                 i, j, ber, wer = f.result()
@@ -57,8 +58,8 @@ if __name__ == "__main__":
 
     os.makedirs('output', exist_ok=True)
 
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-    fig.tight_layout(h_pad=2, w_pad=4)
+    fig, axes = plt.subplots(1, 2, figsize=(20, 9))
+    fig.tight_layout(h_pad=3, w_pad=6)
 
     X, Y = np.meshgrid(noise_powers, sampling_rates)
     all_pos = np.concatenate([ber_grid[ber_grid > 0], wer_grid[wer_grid > 0]])
@@ -70,14 +71,14 @@ if __name__ == "__main__":
         ax.set_xscale('log')
         ax.set_yscale('log')
         ax.set_xticks(noise_powers)
-        ax.set_xticklabels([f'{v:.0e}' for v in noise_powers], rotation=45, ha='right', fontsize=7)
+        ax.set_xticklabels([f'{v:.1e}' for v in noise_powers], rotation=45, ha='right', fontsize=9)
         ax.set_yticks(sampling_rates)
-        ax.set_yticklabels(sampling_rates)
+        ax.set_yticklabels(sampling_rates, fontsize=9)
         ax.xaxis.set_minor_locator(plt.NullLocator())
         ax.yaxis.set_minor_locator(plt.NullLocator())
-        ax.set_xlabel('Noise power')
-        ax.set_ylabel('Sampling rate')
-        ax.set_title(title)
+        ax.set_xlabel('Noise power', fontsize=11)
+        ax.set_ylabel('Sampling rate', fontsize=11)
+        ax.set_title(title, fontsize=13)
         fig.colorbar(im, ax=ax, label=title)
 
     ts = datetime.now().strftime('%Y%m%d_%H%M%S')

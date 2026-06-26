@@ -1,4 +1,4 @@
-from .noise_pipe import AWGN
+from .noise_pipe import AWGN, BrownianNoise
 from .quantization_pipe import QuantizatorPipe
 from .plot_pipe import PlotPipe
 from .ppmbin_pipe import BinPPMGen
@@ -6,13 +6,14 @@ from .runner_pipe import SignalPipeRunner
 from .sampling_pipe import UpSampler_Simple, UpSampler_Timed
 from .signal_pipe import Terminator
 from .correlator_pipe import CorrPipe_Simple, CorrPipe_Timed
-from .filter_pipe import BandpassPipe_Simple, BandpassPipe_Timed
+from .filter_pipe import BandpassPipe_Simple, BandpassPipe_Timed, HighpassPipe_Timed
 from .threshold_pipe import ThresholdPipe
 from .best_fit_pipe import BestFitPipe_Simple, BestFitPipe_Timed
 from .decode_pipe import DecodeSink_Simple, DecodeSink_Timed, DecodePlotSink_Timed
 
 __all__ = [
     "AWGN",
+    "BrownianNoise",
     "QuantizatorPipe",
     "PlotPipe",
     "BinPPMGen",
@@ -24,6 +25,7 @@ __all__ = [
     "CorrPipe_Timed",
     "BandpassPipe_Simple",
     "BandpassPipe_Timed",
+    "HighpassPipe_Timed",
     "ThresholdPipe",
     "BestFitPipe_Simple",
     "BestFitPipe_Timed",

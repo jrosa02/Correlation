@@ -41,10 +41,10 @@ All scalar params from `config.yaml` can be overridden on any subcommand. `singl
 Pipeline: **bits → TX pulse → AWGN → bandpass filter → sliding correlator → decisions**
 
 ### Signal conventions
-- `bits`: sparse `float64` array (0/1) with guaranteed `min_gap_bits` spacing between ones.
+- `bits`: sparse `float64` array (0/1).
 - TX signal: strictly non-negative (unipolar laser pulse), built via `np.convolve(impulse_train, tx_pulse)`.
 - Correlation template: zero-mean bipolar (integral ≈ 0), shaped like `−1…−1 | +1…+1 | −1…−1`. Intentionally different from TX pulse — `make_tx_pulse` vs `make_pulse_template` in `src/pulse_gen.py`.
-- `sps` (samples per symbol) is the upsample rate. All sample-rate arrays have length `n_bits * sps`.
+- `sps` (samples per symbol) is the upsample rate. All sample-rate arrays have length `n_slots * sps`.
 
 ### Data flow
 `src/runner.py` is the shared core. `run_trial(...)` returns `TrialResult(ber, snr_out, stages, corr_threshold, decisions)`. All experiment modes call this. `stages` is an ordered dict of named waveforms passed directly to `plots.plot_waveforms`.

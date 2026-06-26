@@ -5,12 +5,12 @@ from typing import cast
 
 from dzida_phy import (
     BinPPMGen, CorrPipe_Timed, DecodePlotSink_Timed,
-    BestFitPipe_Timed, PlotPipe, ThresholdPipe,
+    BestFitPipe_Timed, PlotPipe, ThresholdPipe, HighpassPipe_Timed,
 )
-from dzida_phy.physical.adc import LTC6268
+from dzida_phy.physical.adc import HMCAD1511
 from dzida_phy.signal_pipe import CompoundPipe
-from dzida_phy.physical.diode import DiodePipe, CVLL_350_9
-from dzida_phy.physical.detector import DET08CL, DetectorPipe
+from dzida_phy.physical.diode import CVLL_350_9
+from dzida_phy.physical.detector import DET08CL
 from dzida_phy.plot_pipe import PlotInputFactory
 from dzida_phy.metrics import bit_error_rate, per_bit_error_rate, word_error_rate
 from dzida_phy.models.model import ABCModel, ModelResult
@@ -95,27 +95,26 @@ class PhyModel(ABCModel):
         return p_rx_w
 
     def _init_figure(self) -> None:
-        self.fig, self.axes = plt.subplots(8, 1)
+        self.fig, self.axes = plt.subplots(9, 1)
         self.fig.set_size_inches((8, 10))
         self.fig.tight_layout(h_pad=1, w_pad=1)
 
     def construct_pipeline(self) -> None:
         ax = self.axes
 
-        p = ax is not None
         samples_per_slot = round(self.sample_rate.to_hz() / self.slot_rate.to_hz())
 
         # Build processing pipeline using physical components via CompoundPipe
         factory = PlotInputFactory(axs=cast(list[Axes], [None] + list(ax)) if ax is not None else [], indxs=(0, 14))
-
-        
 
         pipes = [
             BinPPMGen(self.input_data, self.chunk_size, self.ppm_rank),
             PlotPipe(factory(), 'bar', title='PPM symbols'),
             CVLL_350_9(self.sample_rate, self.slot_rate, plot_input=factory()),
             DET08CL(self.sample_rate, Quantity(self.slot_rate.to_hz()*2), self.signal_power, plot_input=factory()),
-            LTC6268(self.sample_rate, self.sample_rate, 0, plot_input=factory()),
+            HighpassPipe_Timed(Quantity(self.slot_rate.to_hz() / 10), self.sample_rate),
+            PlotPipe(factory(), title='Highpass | DC drift removal', sample_rate=self.sample_rate),
+            HMCAD1511(self.sample_rate, self.sample_rate, plot_input=factory()),
             CorrPipe_Timed(self.sample_rate, self.slot_rate),
             PlotPipe(factory(), title='Rect correlator | FPGA', sample_rate=self.sample_rate),
             ThresholdPipe(self.threshold),
@@ -125,11 +124,11 @@ class PhyModel(ABCModel):
             DecodePlotSink_Timed(
             len(self.input_data), self.chunk_size, self.ppm_rank,
             self.sample_rate, self.slot_rate,
-            plot_input=factory() if p else None,
+            plot_input=factory(),
         )
         ]
 
-        self.decoder = pipes[-1]
+        self.decoder: DecodePlotSink_Timed = pipes[-1]
 
         self.runner.append(CompoundPipe(pipes))
         self._samples_per_slot = samples_per_slot
@@ -148,7 +147,7 @@ class PhyModel(ABCModel):
             )
             self.fig.tight_layout(h_pad=1, w_pad=1)
 
-        decoded = self.decoder.get_data
+        decoded = self.decoder.decoded_data
         return ModelResult(
             ber=bit_error_rate(self.input_data, decoded, self.ppm_rank),
             wer=word_error_rate(self.input_data, decoded),

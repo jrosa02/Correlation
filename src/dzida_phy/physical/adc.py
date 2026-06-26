@@ -15,10 +15,14 @@ class Analog2DigitalPipe(CompoundPipe):
         self.plotpipe = PlotPipe(plot_input, title="ADC", sample_rate=resolution, seed=seed) if plot_input else None
         super().__init__([lowpass, noise, self.quant, self.plotpipe], seed)
 
-class LTC6268(Analog2DigitalPipe):
-    def __init__(self, resolution: Quantity, band: Quantity, noise_power: float, v_range: tuple[float, float] | None = None,
+class HMCAD1511(Analog2DigitalPipe):
+    def __init__(self, resolution: Quantity, band: Quantity, v_range: tuple[float, float] | None = None,
                  plot_input: PlotInput | None = None, seed: int = 42) -> None:
-        super().__init__(resolution, band, noise_power, 8, v_range, plot_input, seed)
+        
+        SNR_dB = 49
+        SNR_linear = 10**(SNR_dB/10)
+
+        super().__init__(resolution, band, 1/SNR_linear, 8, v_range, plot_input, seed)
         if self.plotpipe is not None:
-            title = (f"LTC6268 | ADC - Bits: {self.quant.bits}, Sampling: {resolution.set_repr('freq')}")
+            title = (f"HMCAD 1511 | ADC - Bits: {self.quant.bits}, Sampling: {resolution.set_repr('freq')}")
             self.plotpipe.ax.set_title(title)

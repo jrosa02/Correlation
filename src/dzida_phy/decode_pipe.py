@@ -85,7 +85,7 @@ class DecodePipe_Timed(SignalPipe):
         return symbols
 
     @property
-    def get_data(self) -> np.ndarray:
+    def decoded_data(self) -> np.ndarray:
         return self.data.copy()
 
     def reset(self) -> None:
@@ -106,5 +106,5 @@ class DecodePlotSink_Timed(CompoundPipe):
         super().__init__([self._decoder, plotpipe, Terminator()], seed)
 
     @property
-    def get_data(self) -> np.ndarray:
-        return self._decoder.get_data
+    def decoded_data(self) -> np.ndarray:
+        return self._decoder.decoded_data
