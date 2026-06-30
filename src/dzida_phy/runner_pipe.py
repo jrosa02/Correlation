@@ -6,7 +6,7 @@ from dzida_phy.signal_pipe import SignalPipe
 class SignalPipeRunner:
     def __init__(self, seed: int = 42) -> None:
         self.seed = seed
-        self.pipe_elements: list[SignalPipe] = list()
+        self.pipe_elements: list[SignalPipe] = []
 
     def append(self, pipe_element: SignalPipe):
         pipe_element.set_seed(self.seed)

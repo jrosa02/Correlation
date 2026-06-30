@@ -5,6 +5,8 @@ from numba import njit, prange
 
 from dzida_phy.signal_pipe import SignalPipe
 
+_ROW_BATCH_NDIM = 2
+
 
 @njit(cache=True, fastmath=True, nogil=True, parallel=True)
 def _add_noise(signal, std, rng):
@@ -46,9 +48,9 @@ class BrownianNoise(SignalPipe):
         self.std = np.sqrt(linear_noise_power) if linear_noise_power is not None else 0
 
     def add_noise(self, signal: np.ndarray) -> np.ndarray:
-        s = signal if signal.ndim == 2 else signal[np.newaxis]
+        s = signal if signal.ndim == _ROW_BATCH_NDIM else signal[np.newaxis]
         out = _add_brownian_noise(s, self.std, self.rng)
-        return out if signal.ndim == 2 else out[0]
+        return out if signal.ndim == _ROW_BATCH_NDIM else out[0]
 
     def process(
         self, signal: np.ndarray[tuple[Any, ...], np.dtype[Any]]

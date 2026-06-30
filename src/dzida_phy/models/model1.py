@@ -71,7 +71,7 @@ class Model1(ABCModel):
         p = ax is not None
         factory: PlotInputFactory | None = None
         if p:
-            factory = PlotInputFactory(axs=cast(list[Axes], [None] + list(ax)), indxs=(0, 14))
+            factory = PlotInputFactory(axs=cast(list[Axes], [None, *list(ax)]), indxs=(0, 14))
             assert factory is not None
 
         self.runner.append(BinPPMGen(self.input_data, self.chunk_size, self.ppm_rank))

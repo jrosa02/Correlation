@@ -118,7 +118,7 @@ class CompoundPipe(SignalPipe):
 
 
 class Terminator(SignalPipe):
-    def consume(self, signal: np.ndarray[tuple[Any, ...], np.dtype[Any]]):
+    def consume(self, _signal: np.ndarray[tuple[Any, ...], np.dtype[Any]]):
         return
 
     def reset(self) -> None:

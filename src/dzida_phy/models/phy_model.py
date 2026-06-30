@@ -97,9 +97,7 @@ class PhyModel(ABCModel):
 
         # Total link budget
         total_db = p_tx_dbw + tx_gain_db + rx_gain_db + pointing_loss_db + path_loss_db
-        p_rx_w = 10 ** (total_db / 10)
-
-        return p_rx_w
+        return 10 ** (total_db / 10)
 
     def _init_figure(self) -> None:
         self.fig, self.axes = plt.subplots(9, 1)
@@ -118,10 +116,10 @@ class PhyModel(ABCModel):
 
         # Build processing pipeline using physical components via CompoundPipe
         factory = PlotInputFactory(
-            axs=cast(list[Axes], [None] + list(ax)) if ax is not None else [], indxs=(0, 14)
+            axs=cast(list[Axes], [None, *list(ax)]) if ax is not None else [], indxs=(0, 14)
         )
         factory_fft = PlotInputFactory(
-            axs=cast(list[Axes], [None] + list(ax_fft)) if ax_fft is not None else [], indxs=(0, 14)
+            axs=cast(list[Axes], [None, *list(ax_fft)]) if ax_fft is not None else [], indxs=(0, 14)
         )
 
         def skip_fft_axis(title: str) -> None:

@@ -10,6 +10,7 @@ from dzida_phy.plot_pipe import PlotInput, PlotPipe
 from dzida_phy.signal_pipe import CompoundPipe, SignalPipe
 
 _REF_TYPE = {"rect": 0, "triangle": 1}
+_ZERO_TOL = 1e-15
 
 
 def rect_reference(pulse_width: int) -> np.ndarray:
@@ -25,7 +26,7 @@ def rect_reference(pulse_width: int) -> np.ndarray:
     out = np.empty_like(sig)
     correlate(sig, _REF_TYPE["rect"], pulse_width, out)
     row = out[0] * ref_len
-    nz = np.flatnonzero(np.abs(row) > 1e-15)
+    nz = np.flatnonzero(np.abs(row) > _ZERO_TOL)
     return row[nz[0] : nz[-1] + 1]
 
 

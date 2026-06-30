@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 import experiments.ber_curve
 import experiments.minimize
@@ -9,7 +10,7 @@ import yaml
 
 
 def load_params(config_path: str, overrides: dict) -> dict:
-    with open(config_path) as f:
+    with Path(config_path).open() as f:
         p = yaml.safe_load(f)
     p["snr_range_db"] = np.arange(*p["snr_range_db"])
     # Apply scalar CLI overrides; single sub-dict overrides handled separately

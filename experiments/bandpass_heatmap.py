@@ -3,6 +3,7 @@ import multiprocessing
 import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
+from pathlib import Path
 
 import matplotlib
 
@@ -70,7 +71,7 @@ def _draw_row(fig, axes, data_2d, param_vals, param_name, noise_powers, raw_std,
         cb.set_ticks(thresholds)
         cb.set_ticklabels([str(t) for t in thresholds])
 
-    for k, (noise_pow, color) in enumerate(zip(noise_powers, snr_colors)):
+    for k, (noise_pow, color) in enumerate(zip(noise_powers, snr_colors, strict=False)):
         ax_line.plot(
             param_vals, data_2d[:, k], marker="o", markersize=3, color=color, label=f"noise={noise_pow:.3f}"
         )
@@ -106,7 +107,7 @@ def plot_and_save(ber_raw, wer_raw, bandpass_lows, bandpass_highs, noise_powers,
     ber_std_over_low = ber_raw.std(axis=0)  # (n_highs, n_snr)
     wer_std_over_low = wer_raw.std(axis=0)
 
-    os.makedirs("output", exist_ok=True)
+    Path("output").mkdir(parents=True, exist_ok=True)
     snr_colors = plt.colormaps["plasma"](np.linspace(0.15, 0.85, n_snr))
 
     # 4 rows: BER/low, BER/high, WER/low, WER/high
@@ -119,7 +120,7 @@ def plot_and_save(ber_raw, wer_raw, bandpass_lows, bandpass_highs, noise_powers,
         (wer_2d_low, bandpass_lows, "bandpass_low", wer_std_over_high, "WER"),
         (wer_2d_high, bandpass_highs, "bandpass_high", wer_std_over_low, "WER"),
     ]
-    for row_axes, (data_2d, param_vals, param_name, raw_std, label) in zip(axes, row_configs):
+    for row_axes, (data_2d, param_vals, param_name, raw_std, label) in zip(axes, row_configs, strict=False):
         _draw_row(fig, row_axes, data_2d, param_vals, param_name, noise_powers, raw_std, label, snr_colors)
 
     fig.tight_layout()
@@ -142,7 +143,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.just_plot:
-        with open(args.just_plot) as f:
+        with Path(args.just_plot).open() as f:
             d = json.load(f)
         ber_raw = np.array(d["ber_raw"])
         wer_raw = np.array(d["wer_raw"])
@@ -194,6 +195,6 @@ if __name__ == "__main__":
         "ber_raw": ber_raw.tolist(),
         "wer_raw": wer_raw.tolist(),
     }
-    with open(f"output/bandpass_heatmap_{ts}.json", "w") as f:
+    with Path(f"output/bandpass_heatmap_{ts}.json").open("w") as f:
         json.dump(results, f)
     print(f"Saved output/bandpass_heatmap_{ts}.json")

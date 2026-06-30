@@ -1,7 +1,9 @@
 import json
+import multiprocessing
 import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
+from pathlib import Path
 
 import matplotlib
 
@@ -56,7 +58,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("KeyboardInterrupt, saving plot")
 
-    os.makedirs("output", exist_ok=True)
+    Path("output").mkdir(parents=True, exist_ok=True)
 
     fig, axes = plt.subplots(1, 2, figsize=(20, 9))
     fig.tight_layout(h_pad=3, w_pad=6)
@@ -65,7 +67,7 @@ if __name__ == "__main__":
     all_pos = np.concatenate([ber_grid[ber_grid > 0], wer_grid[wer_grid > 0]])
     floor = float(all_pos.min()) if len(all_pos) else 1e-7
 
-    for ax, grid, title in zip(axes, [ber_grid, wer_grid], ["BER", "WER"]):
+    for ax, grid, title in zip(axes, [ber_grid, wer_grid], ["BER", "WER"], strict=False):
         clipped = np.clip(grid, floor, 1.0)
         im = ax.pcolormesh(X, Y, clipped, norm=LogNorm(vmin=floor, vmax=1.0), cmap="viridis")
         ax.set_xscale("log")
@@ -97,6 +99,6 @@ if __name__ == "__main__":
         "ber": ber_grid.tolist(),
         "wer": wer_grid.tolist(),
     }
-    with open(f"output/sampling_snr_heatmap_{ts}.json", "w") as f:
+    with Path(f"output/sampling_snr_heatmap_{ts}.json").open("w") as f:
         json.dump(results, f)
     print(f"Saved output/sampling_snr_heatmap_{ts}.json")

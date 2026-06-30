@@ -78,7 +78,7 @@ class Model1(ABCModel):
         p = ax is not None
         factory: PlotInputFactory | None = None
         if p:
-            factory = PlotInputFactory(axs=cast(list[Axes], [None] + list(ax)), indxs=(0, 14))
+            factory = PlotInputFactory(axs=cast(list[Axes], [None, *list(ax)]), indxs=(0, 14))
             assert factory is not None
         samples_per_slot = round(self.sample_rate.to_hz() / self.slot_rate.to_hz())
 

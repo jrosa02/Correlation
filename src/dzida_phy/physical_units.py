@@ -1,5 +1,11 @@
 from typing import Literal
 
+_GIGA = 1e9
+_MEGA = 1e6
+_KILO = 1e3
+_MILLI = 1e-3
+_MICRO = 1e-6
+
 
 class Quantity:
     """A physical value stored internally as Hz."""
@@ -22,21 +28,21 @@ class Quantity:
 
     def _fmt_freq(self) -> str:
         hz = self._hz
-        if hz >= 1e9:
-            return f"{hz / 1e9:.6g} GHz"
-        if hz >= 1e6:
-            return f"{hz / 1e6:.6g} MHz"
-        if hz >= 1e3:
-            return f"{hz / 1e3:.6g} kHz"
+        if hz >= _GIGA:
+            return f"{hz / _GIGA:.6g} GHz"
+        if hz >= _MEGA:
+            return f"{hz / _MEGA:.6g} MHz"
+        if hz >= _KILO:
+            return f"{hz / _KILO:.6g} kHz"
         return f"{hz:.6g} Hz"
 
     def _fmt_time(self) -> str:
         s = 1.0 / self._hz
         if s >= 1.0:
             return f"{s:.6g} s"
-        if s >= 1e-3:
+        if s >= _MILLI:
             return f"{s * 1e3:.6g} ms"
-        if s >= 1e-6:
+        if s >= _MICRO:
             return f"{s * 1e6:.6g} us"
         return f"{s * 1e9:.6g} ns"
 

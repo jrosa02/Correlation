@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import numpy as np
 import pytest
 
@@ -138,7 +140,7 @@ class TestCorrPipeTimed:
 
 
 class TestRectReference:
-    PULSE_WIDTHS = [4, 8, 16, 32, 64, 128, 256]
+    PULSE_WIDTHS: ClassVar = [4, 8, 16, 32, 64, 128, 256]
 
     @pytest.mark.parametrize("pw", PULSE_WIDTHS)
     def test_length(self, pw):

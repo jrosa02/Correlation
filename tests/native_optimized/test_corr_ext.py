@@ -25,7 +25,7 @@ def _rect_ref(pw: int) -> np.ndarray:
 
 def _tri_ref(pw: int) -> np.ndarray:
     arr = np.concatenate(
-        ([i for i in range(pw)], [pw - i for i in range(pw)]),
+        (list(range(pw)), [pw - i for i in range(pw)]),
         dtype=np.float64,
     )
     return (arr - arr.mean()) / arr.std()
