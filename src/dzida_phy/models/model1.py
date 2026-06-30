@@ -1,11 +1,19 @@
+from typing import cast
+
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
-from typing import cast
 
 from dzida_phy import (
-    AWGN, BandpassPipe_Simple, BinPPMGen, CorrPipe_Simple, DecodeSink_Simple,
-    BestFitPipe_Simple, PlotPipe, ThresholdPipe, UpSampler_Simple,
+    AWGN,
+    BandpassPipe_Simple,
+    BestFitPipe_Simple,
+    BinPPMGen,
+    CorrPipe_Simple,
+    DecodeSink_Simple,
+    PlotPipe,
+    ThresholdPipe,
+    UpSampler_Simple,
 )
 from dzida_phy.metrics import bit_error_rate, per_bit_error_rate, word_error_rate
 from dzida_phy.models.model import ABCModel, ModelResult
@@ -39,9 +47,7 @@ class Model1(ABCModel):
 
         rng = np.random.default_rng(seed)
         n = n_symbols if n_symbols is not None else 8 * chunk_size
-        self.input_data = np.concatenate(
-            (rng.integers(0, ppm_rank, n, dtype=int), [0, ppm_rank - 1])
-        )
+        self.input_data = np.concatenate((rng.integers(0, ppm_rank, n, dtype=int), [0, ppm_rank - 1]))
 
         self.fig = None
         self.axes = None
@@ -69,19 +75,26 @@ class Model1(ABCModel):
             assert factory is not None
 
         self.runner.append(BinPPMGen(self.input_data, self.chunk_size, self.ppm_rank))
-        if p: self.runner.append(PlotPipe(factory(), 'bar', title='PPM symbols'))
+        if p:
+            self.runner.append(PlotPipe(factory(), "bar", title="PPM symbols"))
         self.runner.append(UpSampler_Simple(self.sampling_rate))
-        if p: self.runner.append(PlotPipe(factory(), title='Upsampled'))
+        if p:
+            self.runner.append(PlotPipe(factory(), title="Upsampled"))
         self.runner.append(AWGN(self.snr))
-        if p: self.runner.append(PlotPipe(factory(), title='AWGN'))
+        if p:
+            self.runner.append(PlotPipe(factory(), title="AWGN"))
         self.runner.append(BandpassPipe_Simple(self.bandpass_low, self.bandpass_high))
-        if p: self.runner.append(PlotPipe(factory(), title='Bandpass'))
-        self.runner.append(CorrPipe_Simple('rect', pulse_width=self.sampling_rate))
-        if p: self.runner.append(PlotPipe(factory(), title='Rect correlator'))
+        if p:
+            self.runner.append(PlotPipe(factory(), title="Bandpass"))
+        self.runner.append(CorrPipe_Simple("rect", pulse_width=self.sampling_rate))
+        if p:
+            self.runner.append(PlotPipe(factory(), title="Rect correlator"))
         self.runner.append(ThresholdPipe(self.threshold))
-        if p: self.runner.append(PlotPipe(factory(), title='Threshold'))
+        if p:
+            self.runner.append(PlotPipe(factory(), title="Threshold"))
         self.runner.append(BestFitPipe_Simple(rate=self.sampling_rate))
-        if p: self.runner.append(PlotPipe(factory(), title='BestFitPipe'))
+        if p:
+            self.runner.append(PlotPipe(factory(), title="BestFitPipe"))
         self.runner.append(self.decoder)
 
     def run(self) -> ModelResult:

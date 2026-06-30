@@ -17,14 +17,16 @@ def _repeat_upsample(signal, rate):
 
 
 class UpSampler_Simple(SignalPipe):
-    def __init__(self, rate: int, method: Literal['repeat'] = 'repeat', seed: int = 42) -> None:
+    def __init__(self, rate: int, method: Literal["repeat"] = "repeat", seed: int = 42) -> None:
         super().__init__(seed)
         self.rate = rate
         self.method = method
 
-    def process(self, signal: np.ndarray[tuple[Any, ...], np.dtype[Any]]) -> np.ndarray[tuple[Any, ...], np.dtype[Any]]:
+    def process(
+        self, signal: np.ndarray[tuple[Any, ...], np.dtype[Any]]
+    ) -> np.ndarray[tuple[Any, ...], np.dtype[Any]]:
         match self.method:
-            case 'repeat':
+            case "repeat":
                 return _repeat_upsample(signal, self.rate)
             case _:
                 raise NotImplementedError()
@@ -38,7 +40,7 @@ class UpSampler_Timed(UpSampler_Simple):
         self,
         sample_rate: Quantity,
         slot_rate: Quantity,
-        method: Literal['repeat'] = 'repeat',
+        method: Literal["repeat"] = "repeat",
         seed: int = 42,
     ) -> None:
         super().__init__(

@@ -9,14 +9,18 @@ RNG = np.random.default_rng(0)
 
 # --- reference implementations (match original correlator_pipe.py logic) ---
 
+
 def _rect_ref(pw: int) -> np.ndarray:
-    return np.concatenate((
-        np.repeat([-1], pw // 2 - 1),
-        [-2, 2],
-        np.repeat([1], pw - 2),
-        [2, -2],
-        np.repeat([-1], pw // 2 - 1),
-    ), dtype=np.float64)
+    return np.concatenate(
+        (
+            np.repeat([-1], pw // 2 - 1),
+            [-2, 2],
+            np.repeat([1], pw - 2),
+            [2, -2],
+            np.repeat([-1], pw // 2 - 1),
+        ),
+        dtype=np.float64,
+    )
 
 
 def _tri_ref(pw: int) -> np.ndarray:
@@ -44,6 +48,7 @@ def _c_correlate(signal: np.ndarray, ref_type: int, pw: int) -> np.ndarray:
 
 # --- output shape ---
 
+
 class TestOutputShape:
     def test_1d_input_returns_1d(self):
         sig = RNG.standard_normal(128)
@@ -65,6 +70,7 @@ class TestOutputShape:
 
 
 # --- numerical agreement with numpy reference ---
+
 
 class TestNumericalMatch:
     TOL = 1e-12
@@ -102,6 +108,7 @@ class TestNumericalMatch:
 
 
 # --- edge / boundary handling ---
+
 
 class TestEdgePadding:
     """C code zero-pads (matching numpy 'same') at signal boundaries.
@@ -155,6 +162,7 @@ class TestEdgePadding:
 
 # --- normalization ---
 
+
 class TestNormalization:
     def test_rect_normalized_by_ref_len(self):
         # signal of all ones, away from edges: rect interior = sum(ref)/ref_len = 0
@@ -172,6 +180,7 @@ class TestNormalization:
 
 
 # --- error handling ---
+
 
 class TestErrors:
     def test_invalid_ref_type_raises(self):

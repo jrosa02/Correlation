@@ -1,16 +1,16 @@
 import json
 import os
-from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from datetime import datetime
 
 import matplotlib
-matplotlib.use('Agg')
+
+matplotlib.use("Agg")
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 
 from dzida_phy.models.model1 import Model1
-
 
 seed = 42
 chunk_size = 1024
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     ]
 
     try:
-        mp_ctx = multiprocessing.get_context('spawn')
+        mp_ctx = multiprocessing.get_context("spawn")
         with ProcessPoolExecutor(max_workers=min(len(tasks), os.cpu_count()), mp_context=mp_ctx) as executor:
             futures = {executor.submit(run_cell, t): t for t in tasks}
             for f in as_completed(futures):
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("KeyboardInterrupt, saving plot")
 
-    os.makedirs('output', exist_ok=True)
+    os.makedirs("output", exist_ok=True)
 
     fig, axes = plt.subplots(1, 2, figsize=(20, 9))
     fig.tight_layout(h_pad=3, w_pad=6)
@@ -65,24 +65,24 @@ if __name__ == "__main__":
     all_pos = np.concatenate([ber_grid[ber_grid > 0], wer_grid[wer_grid > 0]])
     floor = float(all_pos.min()) if len(all_pos) else 1e-7
 
-    for ax, grid, title in zip(axes, [ber_grid, wer_grid], ['BER', 'WER']):
+    for ax, grid, title in zip(axes, [ber_grid, wer_grid], ["BER", "WER"]):
         clipped = np.clip(grid, floor, 1.0)
-        im = ax.pcolormesh(X, Y, clipped, norm=LogNorm(vmin=floor, vmax=1.0), cmap='viridis')
-        ax.set_xscale('log')
-        ax.set_yscale('log')
+        im = ax.pcolormesh(X, Y, clipped, norm=LogNorm(vmin=floor, vmax=1.0), cmap="viridis")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
         ax.set_xticks(noise_powers)
-        ax.set_xticklabels([f'{v:.1e}' for v in noise_powers], rotation=45, ha='right', fontsize=9)
+        ax.set_xticklabels([f"{v:.1e}" for v in noise_powers], rotation=45, ha="right", fontsize=9)
         ax.set_yticks(sampling_rates)
         ax.set_yticklabels(sampling_rates, fontsize=9)
         ax.xaxis.set_minor_locator(plt.NullLocator())
         ax.yaxis.set_minor_locator(plt.NullLocator())
-        ax.set_xlabel('Noise power', fontsize=11)
-        ax.set_ylabel('Sampling rate', fontsize=11)
+        ax.set_xlabel("Noise power", fontsize=11)
+        ax.set_ylabel("Sampling rate", fontsize=11)
         ax.set_title(title, fontsize=13)
         fig.colorbar(im, ax=ax, label=title)
 
-    ts = datetime.now().strftime('%Y%m%d_%H%M%S')
-    fig.savefig(f'output/sampling_snr_heatmap_{ts}.png', dpi=150, bbox_inches='tight')
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    fig.savefig(f"output/sampling_snr_heatmap_{ts}.png", dpi=150, bbox_inches="tight")
     print(f"Saved output/sampling_snr_heatmap_{ts}.png")
 
     results = {
@@ -97,6 +97,6 @@ if __name__ == "__main__":
         "ber": ber_grid.tolist(),
         "wer": wer_grid.tolist(),
     }
-    with open(f'output/sampling_snr_heatmap_{ts}.json', 'w') as f:
+    with open(f"output/sampling_snr_heatmap_{ts}.json", "w") as f:
         json.dump(results, f)
     print(f"Saved output/sampling_snr_heatmap_{ts}.json")

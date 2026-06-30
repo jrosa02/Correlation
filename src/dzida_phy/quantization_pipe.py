@@ -1,4 +1,5 @@
 import numpy as np
+
 from dzida_phy.signal_pipe import SignalPipe
 
 
@@ -6,7 +7,7 @@ class QuantizatorPipe(SignalPipe):
     def __init__(self, bits: int, v_range: tuple[float, float] | None = None, seed: int = 42) -> None:
         super().__init__(seed)
         self.bits = bits
-        self.levels = 2 ** bits
+        self.levels = 2**bits
         self.v_range = v_range
 
     def process(self, signal: np.ndarray) -> np.ndarray:

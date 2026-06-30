@@ -1,18 +1,24 @@
 import numpy as np
 import pytest
 
-from dzida_phy.physical_units import Quantity, MHz, kHz, Hz, ns, us, ms, s
 from dzida_phy import (
-    BandpassPipe_Simple, BandpassPipe_Timed,
-    UpSampler_Simple, UpSampler_Timed,
-    CorrPipe_Simple, CorrPipe_Timed, RectCorrModule_Timed,
-    DecodeSink_Simple, DecodeSink_Timed,
-    BestFitPipe_Simple, BestFitPipe_Timed,
+    BandpassPipe_Simple,
+    BandpassPipe_Timed,
+    BestFitPipe_Simple,
+    BestFitPipe_Timed,
+    CorrPipe_Simple,
+    CorrPipe_Timed,
+    DecodeSink_Simple,
+    DecodeSink_Timed,
+    RectCorrModule_Timed,
+    UpSampler_Simple,
+    UpSampler_Timed,
 )
 from dzida_phy.correlator_pipe import rect_reference
-
+from dzida_phy.physical_units import Hz, MHz, Quantity, kHz, ms, ns, s, us
 
 # --- physical_units ---
+
 
 class TestQuantity:
     def test_freq_mhz(self):
@@ -57,6 +63,7 @@ class TestQuantity:
 
 # --- BandpassPipe_Timed ---
 
+
 class TestBandpassPipeTimed:
     def test_inheritance(self):
         assert issubclass(BandpassPipe_Timed, BandpassPipe_Simple)
@@ -84,6 +91,7 @@ class TestBandpassPipeTimed:
 
 # --- UpSampler_Timed ---
 
+
 class TestUpSamplerTimed:
     def test_inheritance(self):
         assert issubclass(UpSampler_Timed, UpSampler_Simple)
@@ -102,11 +110,12 @@ class TestUpSamplerTimed:
         assert u.rate == round(200e6 / 7e6)
 
     def test_method_passthrough(self):
-        u = UpSampler_Timed(200 * MHz, 6.25 * MHz, method='repeat')
-        assert u.method == 'repeat'
+        u = UpSampler_Timed(200 * MHz, 6.25 * MHz, method="repeat")
+        assert u.method == "repeat"
 
 
 # --- CorrPipe_Timed ---
+
 
 class TestCorrPipeTimed:
     def test_inheritance(self):
@@ -121,11 +130,12 @@ class TestCorrPipeTimed:
         assert c.pulse_width == 32
 
     def test_ref_type_passthrough(self):
-        c = CorrPipe_Timed(200 * MHz, 6.25 * MHz, ref_type='triangle')
-        assert c.ref_type == 'triangle'
+        c = CorrPipe_Timed(200 * MHz, 6.25 * MHz, ref_type="triangle")
+        assert c.ref_type == "triangle"
 
 
 # --- rect_reference (recovered from the compiled corr_ext kernel) ---
+
 
 class TestRectReference:
     PULSE_WIDTHS = [4, 8, 16, 32, 64, 128, 256]
@@ -155,6 +165,7 @@ class TestRectReference:
 
 # --- RectCorrModule_Timed ---
 
+
 class TestRectCorrModuleTimed:
     def test_constructs_without_plotting(self):
         m = RectCorrModule_Timed(200 * MHz, 6.25 * MHz)
@@ -169,6 +180,7 @@ class TestRectCorrModuleTimed:
 
 
 # --- DecodeSink_Timed ---
+
 
 class TestDecodeSinkTimed:
     def test_inheritance(self):
@@ -192,6 +204,7 @@ class TestDecodeSinkTimed:
 
 
 # --- BestFitPipe_Timed ---
+
 
 class TestBestFitPipeTimed:
     def test_inheritance(self):

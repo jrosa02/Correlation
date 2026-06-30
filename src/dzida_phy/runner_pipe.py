@@ -1,10 +1,9 @@
 import asyncio
 
-
 from dzida_phy.signal_pipe import SignalPipe
 
 
-class SignalPipeRunner():
+class SignalPipeRunner:
     def __init__(self, seed: int = 42) -> None:
         self.seed = seed
         self.pipe_elements: list[SignalPipe] = list()
@@ -27,7 +26,6 @@ class SignalPipeRunner():
             repr += str(elem) + "->"
         repr += str(self.pipe_elements[-1])
         return repr
-    
 
     def reset(self):
         for elem in self.pipe_elements:

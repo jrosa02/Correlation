@@ -36,7 +36,7 @@ class BinPPMGen(SignalPipe):
     def from_indices(self, n_slots: int, indices: np.ndarray) -> np.ndarray:
         """Vectorized batch creation via numba. Use uint8 instead of bool."""
         return _batch_symbols_numba(indices.astype(np.int64), n_slots)
-    
+
     def random_array(self, n_symbols, n_slots):
         """Efficient - vectorized array creation with object wrapper"""
         indices = self.rng.integers(0, n_slots, size=n_symbols)
@@ -46,13 +46,14 @@ class BinPPMGen(SignalPipe):
     def generate(self):
         if self._chunk_idx >= len(self.indices):
             return None
-        chunk = self.indices[self._chunk_idx:self._chunk_idx + self.chunk_size]
+        chunk = self.indices[self._chunk_idx : self._chunk_idx + self.chunk_size]
         symbols = self.from_indices(self.n_slots, chunk)
         self._chunk_idx += self.chunk_size
         return symbols
 
     def reset(self) -> None:
         self._chunk_idx = 0
+
 
 def generate_bits(n_slots: int, seed: int | None = None) -> BinPPMSymbol:
     """Generate random binary PPM symbol."""

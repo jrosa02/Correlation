@@ -1,10 +1,11 @@
 import argparse
-import yaml
-import numpy as np
+
+import experiments.ber_curve
+import experiments.minimize
 import experiments.single
 import experiments.sweep
-import experiments.minimize
-import experiments.ber_curve
+import numpy as np
+import yaml
 
 
 def load_params(config_path: str, overrides: dict) -> dict:
@@ -12,7 +13,9 @@ def load_params(config_path: str, overrides: dict) -> dict:
         p = yaml.safe_load(f)
     p["snr_range_db"] = np.arange(*p["snr_range_db"])
     # Apply scalar CLI overrides; single sub-dict overrides handled separately
-    single_overrides = {k: v for k, v in overrides.items() if k in ("snr_db", "bandpass_bw", "corr_len") and v is not None}
+    single_overrides = {
+        k: v for k, v in overrides.items() if k in ("snr_db", "bandpass_bw", "corr_len") and v is not None
+    }
     top_overrides = {k: v for k, v in overrides.items() if k not in single_overrides and v is not None}
     p.update(top_overrides)
     p.setdefault("single", {})
@@ -61,10 +64,14 @@ def main():
     p = load_params(args.config, overrides)
 
     match args.mode:
-        case "single":    experiments.single.run(p)
-        case "sweep":     experiments.sweep.run(p)
-        case "minimize":  experiments.minimize.run(p)
-        case "ber_curve": experiments.ber_curve.run(p)
+        case "single":
+            experiments.single.run(p)
+        case "sweep":
+            experiments.sweep.run(p)
+        case "minimize":
+            experiments.minimize.run(p)
+        case "ber_curve":
+            experiments.ber_curve.run(p)
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ def bit_error_rate(tx: np.ndarray, rx: np.ndarray, n_slots: int) -> float:
     n = min(len(tx), len(rx))
     bits_per_symbol = int(np.log2(n_slots))
     xor = np.bitwise_xor(tx[:n].astype(np.uint64), rx[:n].astype(np.uint64))
-    bit_errors = np.unpackbits(xor.view(np.uint8).reshape(n, 8), axis=1, bitorder='big').sum()
+    bit_errors = np.unpackbits(xor.view(np.uint8).reshape(n, 8), axis=1, bitorder="big").sum()
     return float(bit_errors / (n * bits_per_symbol))
 
 
@@ -25,6 +25,6 @@ def per_bit_error_rate(tx: np.ndarray, rx: np.ndarray, n_slots: int) -> np.ndarr
     bits_per_symbol = int(np.log2(n_slots))
     xor = np.bitwise_xor(tx[:n].astype(np.uint64), rx[:n].astype(np.uint64))
     # bitorder='little' → column k = bit k of the uint64 value
-    unpacked = np.unpackbits(xor.view(np.uint8).reshape(n, 8), axis=1, bitorder='little')
+    unpacked = np.unpackbits(xor.view(np.uint8).reshape(n, 8), axis=1, bitorder="little")
     counts: np.ndarray = unpacked[:, :bits_per_symbol].sum(axis=0).astype(np.int64)
     return counts / n

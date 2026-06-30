@@ -1,18 +1,19 @@
-
 from dataclasses import dataclass
 from typing import Any, Literal
 
+import numpy as np
 from matplotlib.axes import Axes
 from numpy import dtype, ndarray
-import numpy as np
 
-from dzida_phy.signal_pipe import SignalPipe
 from dzida_phy.physical_units import Quantity
+from dzida_phy.signal_pipe import SignalPipe
+
 
 @dataclass
 class PlotInput:
     ax: Axes
     indxs: tuple[int, int]
+
 
 @dataclass
 class PlotInputFactory:
@@ -96,7 +97,7 @@ class PlotPipe(CapturePlotPipe):
     def __init__(
         self,
         plt_in: PlotInput,
-        plot_type: Literal['plot', 'bar'] = 'plot',
+        plot_type: Literal["plot", "bar"] = "plot",
         title: str | None = None,
         sample_rate: Quantity | None = None,
         plot_kwargs: dict | None = None,
@@ -109,12 +110,16 @@ class PlotPipe(CapturePlotPipe):
         x_axis, x_label = self._get_time_axis(len(signal_values))
 
         match self.type:
-            case 'plot':
-                self.ax.plot(x_axis, signal_values,
-                             **{'label': f"Signal at {self._plot_indexes}", **self.plot_kwargs})
-            case 'bar':
+            case "plot":
+                self.ax.plot(
+                    x_axis, signal_values, **{"label": f"Signal at {self._plot_indexes}", **self.plot_kwargs}
+                )
+            case "bar":
                 width = (x_axis[1] - x_axis[0]) * 0.8 if len(x_axis) > 1 else 0.8
-                self.ax.bar(x_axis, signal_values,
-                            **{'width': width, 'label': f"Signal at {self._plot_indexes}", **self.plot_kwargs})
+                self.ax.bar(
+                    x_axis,
+                    signal_values,
+                    **{"width": width, "label": f"Signal at {self._plot_indexes}", **self.plot_kwargs},
+                )
         self.ax.set_xlabel(x_label)
         self.ax.grid(True)

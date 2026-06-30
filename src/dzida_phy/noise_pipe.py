@@ -30,16 +30,19 @@ class AWGN(SignalPipe):
     def add_noise(self, signal: np.ndarray) -> np.ndarray:
         return _add_noise(signal, self.std, self.rng)
 
-    def process(self, signal: np.ndarray[tuple[Any, ...], np.dtype[Any]]) -> np.ndarray[tuple[Any, ...], np.dtype[Any]]:
+    def process(
+        self, signal: np.ndarray[tuple[Any, ...], np.dtype[Any]]
+    ) -> np.ndarray[tuple[Any, ...], np.dtype[Any]]:
         return self.add_noise(signal)
 
     def reset(self) -> None:
         pass
 
+
 class BrownianNoise(SignalPipe):
-    def __init__(self, linear_noise_power: float|None, seed: int = 42) -> None:
+    def __init__(self, linear_noise_power: float | None, seed: int = 42) -> None:
         super().__init__(seed)
-        self.noise_power = linear_noise_power  if linear_noise_power is not None else 0
+        self.noise_power = linear_noise_power if linear_noise_power is not None else 0
         self.std = np.sqrt(linear_noise_power) if linear_noise_power is not None else 0
 
     def add_noise(self, signal: np.ndarray) -> np.ndarray:
@@ -47,7 +50,9 @@ class BrownianNoise(SignalPipe):
         out = _add_brownian_noise(s, self.std, self.rng)
         return out if signal.ndim == 2 else out[0]
 
-    def process(self, signal: np.ndarray[tuple[Any, ...], np.dtype[Any]]) -> np.ndarray[tuple[Any, ...], np.dtype[Any]]:
+    def process(
+        self, signal: np.ndarray[tuple[Any, ...], np.dtype[Any]]
+    ) -> np.ndarray[tuple[Any, ...], np.dtype[Any]]:
         return self.add_noise(signal)
 
     def reset(self) -> None:

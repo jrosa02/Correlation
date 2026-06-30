@@ -1,7 +1,7 @@
 from typing import Any
 
-from numpy import dtype, ndarray
 import numpy as np
+from numpy import dtype, ndarray
 
 from dzida_phy.physical_units import Quantity
 from dzida_phy.plot_pipe import CapturePlotPipe, PlotInput, auto_scale_units
@@ -41,10 +41,12 @@ class FftPlotPipe(CapturePlotPipe):
         plot_kwargs: dict | None = None,
         seed: int = 42,
     ) -> None:
-        assert sample_rate is not None, ValueError("FftPlotPipe requires sample_rate to compute a frequency axis")
+        assert sample_rate is not None, ValueError(
+            "FftPlotPipe requires sample_rate to compute a frequency axis"
+        )
         super().__init__(plt_in, title, sample_rate, plot_kwargs, seed)
 
     def plot(self, signal_values: ndarray[tuple[Any, ...], dtype[Any]]):
         assert self.sample_rate is not None
-        plot_kwargs = {'label': f"Signal at {self._plot_indexes}", **self.plot_kwargs}
+        plot_kwargs = {"label": f"Signal at {self._plot_indexes}", **self.plot_kwargs}
         plot_fft_spectrum(self.ax, signal_values, self.sample_rate, plot_kwargs=plot_kwargs)

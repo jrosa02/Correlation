@@ -1,20 +1,27 @@
+from typing import cast
+
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
-from typing import cast
 
 from dzida_phy import (
-    BinPPMGen, RectCorrModule_Timed, DecodePlotSink_Timed,
-    BestFitPipe_Timed, PlotPipe, FftPlotPipe, ThresholdModule, HighpassModule_Timed,
+    BestFitPipe_Timed,
+    BinPPMGen,
+    DecodePlotSink_Timed,
+    FftPlotPipe,
+    HighpassModule_Timed,
+    PlotPipe,
+    RectCorrModule_Timed,
+    ThresholdModule,
 )
-from dzida_phy.physical.adc import HMCAD1511
-from dzida_phy.signal_pipe import CompoundPipe
-from dzida_phy.physical.diode import CVLL_350_9
-from dzida_phy.physical.detector import DET08CL
-from dzida_phy.plot_pipe import PlotInputFactory
 from dzida_phy.metrics import bit_error_rate, per_bit_error_rate, word_error_rate
 from dzida_phy.models.model import ABCModel, ModelResult
+from dzida_phy.physical.adc import HMCAD1511
+from dzida_phy.physical.detector import DET08CL
+from dzida_phy.physical.diode import CVLL_350_9
 from dzida_phy.physical_units import Quantity
+from dzida_phy.plot_pipe import PlotInputFactory
+from dzida_phy.signal_pipe import CompoundPipe
 
 
 class PhyModel(ABCModel):
@@ -59,9 +66,7 @@ class PhyModel(ABCModel):
 
         rng = np.random.default_rng(seed)
         n = n_symbols if n_symbols is not None else 8 * chunk_size
-        self.input_data = np.concatenate(
-            (rng.integers(0, ppm_rank, n, dtype=int), [0, ppm_rank - 1])
-        )
+        self.input_data = np.concatenate((rng.integers(0, ppm_rank, n, dtype=int), [0, ppm_rank - 1]))
 
         self.fig = None
         self.axes = None
@@ -112,37 +117,57 @@ class PhyModel(ABCModel):
         samples_per_slot = round(self.sample_rate.to_hz() / self.slot_rate.to_hz())
 
         # Build processing pipeline using physical components via CompoundPipe
-        factory = PlotInputFactory(axs=cast(list[Axes], [None] + list(ax)) if ax is not None else [], indxs=(0, 14))
-        factory_fft = PlotInputFactory(axs=cast(list[Axes], [None] + list(ax_fft)) if ax_fft is not None else [], indxs=(0, 14))
+        factory = PlotInputFactory(
+            axs=cast(list[Axes], [None] + list(ax)) if ax is not None else [], indxs=(0, 14)
+        )
+        factory_fft = PlotInputFactory(
+            axs=cast(list[Axes], [None] + list(ax_fft)) if ax_fft is not None else [], indxs=(0, 14)
+        )
 
         def skip_fft_axis(title: str) -> None:
             """Consume one FFT axis slot for a symbol-rate stage with no meaningful FFT."""
             plt_in = factory_fft()
             if plt_in is not None:
                 plt_in.ax.set_title(title)
-                plt_in.ax.axis('off')
+                plt_in.ax.axis("off")
 
         pipes = [
             BinPPMGen(self.input_data, self.chunk_size, self.ppm_rank),
-            PlotPipe(factory(), 'bar', title='PPM symbols'),
-            skip_fft_axis('PPM symbols'),
+            PlotPipe(factory(), "bar", title="PPM symbols"),
+            skip_fft_axis("PPM symbols"),
             CVLL_350_9(self.sample_rate, self.slot_rate, plot_input=factory(), fft_plot_input=factory_fft()),
-            DET08CL(self.sample_rate, Quantity(self.slot_rate.to_hz()*2), self.signal_power,
-                    plot_input=factory(), fft_plot_input=factory_fft()),
-            HighpassModule_Timed(Quantity(self.slot_rate.to_hz()/20), self.sample_rate,
-                                 plot_input=factory(), fft_plot_input=factory_fft()),
+            DET08CL(
+                self.sample_rate,
+                Quantity(self.slot_rate.to_hz() * 2),
+                self.signal_power,
+                plot_input=factory(),
+                fft_plot_input=factory_fft(),
+            ),
+            HighpassModule_Timed(
+                Quantity(self.slot_rate.to_hz() / 20),
+                self.sample_rate,
+                plot_input=factory(),
+                fft_plot_input=factory_fft(),
+            ),
             HMCAD1511(self.sample_rate, self.sample_rate, plot_input=factory(), fft_plot_input=factory_fft()),
-            RectCorrModule_Timed(self.sample_rate, self.slot_rate,
-                                plot_input=factory(), fft_plot_input=factory_fft()),
-            ThresholdModule(self.threshold, self.sample_rate, plot_input=factory(), fft_plot_input=factory_fft()),
+            RectCorrModule_Timed(
+                self.sample_rate, self.slot_rate, plot_input=factory(), fft_plot_input=factory_fft()
+            ),
+            ThresholdModule(
+                self.threshold, self.sample_rate, plot_input=factory(), fft_plot_input=factory_fft()
+            ),
             BestFitPipe_Timed(self.sample_rate, self.slot_rate),
-            PlotPipe(factory(), title='BestFitPipe | FPGA', sample_rate=self.sample_rate),
-            FftPlotPipe(factory_fft(), title='BestFitPipe | FPGA', sample_rate=self.sample_rate),
+            PlotPipe(factory(), title="BestFitPipe | FPGA", sample_rate=self.sample_rate),
+            FftPlotPipe(factory_fft(), title="BestFitPipe | FPGA", sample_rate=self.sample_rate),
             DecodePlotSink_Timed(
-            len(self.input_data), self.chunk_size, self.ppm_rank,
-            self.sample_rate, self.slot_rate,
-            plot_input=factory(), fft_plot_input=factory_fft(),
-        )
+                len(self.input_data),
+                self.chunk_size,
+                self.ppm_rank,
+                self.sample_rate,
+                self.slot_rate,
+                plot_input=factory(),
+                fft_plot_input=factory_fft(),
+            ),
         ]
 
         self.decoder: DecodePlotSink_Timed = pipes[-1]
