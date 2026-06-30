@@ -5,7 +5,7 @@ from typing import cast
 
 from dzida_phy import (
     AWGN, BandpassPipe_Simple, BinPPMGen, CorrPipe_Simple, DecodeSink_Simple,
-    BestFitPipe_Simple, PlotPipe, SignalPipeRunner, ThresholdPipe, UpSampler_Simple,
+    BestFitPipe_Simple, PlotPipe, ThresholdPipe, UpSampler_Simple,
 )
 from dzida_phy.metrics import bit_error_rate, per_bit_error_rate, word_error_rate
 from dzida_phy.models.model import ABCModel, ModelResult

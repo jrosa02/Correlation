@@ -7,6 +7,7 @@ from scipy import signal as sp
 from dzida_phy.physical_units import Quantity
 from dzida_phy.signal_pipe import SignalPipe, CompoundPipe
 from dzida_phy.plot_pipe import PlotPipe, PlotInput
+from dzida_phy.fft_plot_pipe import FftPlotPipe
 
 
 class BandpassPipe_Simple(SignalPipe):
@@ -127,11 +128,13 @@ class HighpassPipe_Timed(HighpassPipe_Simple):
 
 class HighpassModule_Timed(CompoundPipe):
     def __init__(self, highpass_cutoff: Quantity, sample_rate: Quantity, plot_input: PlotInput | None = None,
-                 order: int = 4, seed: int = 42) -> None:
+                 fft_plot_input: PlotInput | None = None, order: int = 4, seed: int = 42) -> None:
         filt     = HighpassPipe_Timed(highpass_cutoff, sample_rate, order, seed)
         highpass_cutoff.set_repr('freq')
-        plotpipe = PlotPipe(plot_input, title=f"Highpass - Cufoff: {highpass_cutoff}", sample_rate=sample_rate) if plot_input else None
-        super().__init__([filt, plotpipe], seed)
+        title = f"Highpass - Cufoff: {highpass_cutoff}"
+        plotpipe = PlotPipe(plot_input, title=title, sample_rate=sample_rate) if plot_input else None
+        fftplotpipe = FftPlotPipe(fft_plot_input, title=title, sample_rate=sample_rate) if fft_plot_input else None
+        super().__init__([filt, plotpipe, fftplotpipe], seed)
 
 
 class LowpassModule_Timed(CompoundPipe):

@@ -4,8 +4,8 @@ from matplotlib.axes import Axes
 from typing import cast
 
 from dzida_phy import (
-    BinPPMGen, CorrPipe_Timed, DecodePlotSink_Timed,
-    BestFitPipe_Timed, PlotPipe, ThresholdModule, HighpassModule_Timed,
+    BinPPMGen, RectCorrModule_Timed, DecodePlotSink_Timed,
+    BestFitPipe_Timed, PlotPipe, FftPlotPipe, ThresholdModule, HighpassModule_Timed,
 )
 from dzida_phy.physical.adc import HMCAD1511
 from dzida_phy.signal_pipe import CompoundPipe
@@ -14,7 +14,7 @@ from dzida_phy.physical.detector import DET08CL
 from dzida_phy.plot_pipe import PlotInputFactory
 from dzida_phy.metrics import bit_error_rate, per_bit_error_rate, word_error_rate
 from dzida_phy.models.model import ABCModel, ModelResult
-from dzida_phy.physical_units import Quantity, ns
+from dzida_phy.physical_units import Quantity
 
 
 class PhyModel(ABCModel):
@@ -65,6 +65,8 @@ class PhyModel(ABCModel):
 
         self.fig = None
         self.axes = None
+        self.fig_fft = None
+        self.axes_fft = None
         if plotting:
             self._init_figure()
 
@@ -99,31 +101,47 @@ class PhyModel(ABCModel):
         self.fig.set_size_inches((16, 20))
         self.fig.tight_layout(h_pad=1, w_pad=1)
 
+        self.fig_fft, self.axes_fft = plt.subplots(9, 1)
+        self.fig_fft.set_size_inches((16, 20))
+        self.fig_fft.tight_layout(h_pad=1, w_pad=1)
+
     def construct_pipeline(self) -> None:
         ax = self.axes
+        ax_fft = self.axes_fft
 
         samples_per_slot = round(self.sample_rate.to_hz() / self.slot_rate.to_hz())
 
         # Build processing pipeline using physical components via CompoundPipe
         factory = PlotInputFactory(axs=cast(list[Axes], [None] + list(ax)) if ax is not None else [], indxs=(0, 14))
+        factory_fft = PlotInputFactory(axs=cast(list[Axes], [None] + list(ax_fft)) if ax_fft is not None else [], indxs=(0, 14))
+
+        def skip_fft_axis(title: str) -> None:
+            """Consume one FFT axis slot for a symbol-rate stage with no meaningful FFT."""
+            plt_in = factory_fft()
+            if plt_in is not None:
+                plt_in.ax.set_title(title)
+                plt_in.ax.axis('off')
 
         pipes = [
             BinPPMGen(self.input_data, self.chunk_size, self.ppm_rank),
             PlotPipe(factory(), 'bar', title='PPM symbols'),
-            CVLL_350_9(self.sample_rate, self.slot_rate, plot_input=factory()),
-            DET08CL(self.sample_rate, Quantity(self.slot_rate.to_hz()*2), self.signal_power, plot_input=factory()),
+            skip_fft_axis('PPM symbols'),
+            CVLL_350_9(self.sample_rate, self.slot_rate, plot_input=factory(), fft_plot_input=factory_fft()),
+            DET08CL(self.sample_rate, Quantity(self.slot_rate.to_hz()*2), self.signal_power,
+                    plot_input=factory(), fft_plot_input=factory_fft()),
             HighpassModule_Timed(Quantity(self.slot_rate.to_hz()/20), self.sample_rate,
-                                 plot_input=factory()),
-            HMCAD1511(self.sample_rate, self.sample_rate, plot_input=factory()),
-            CorrPipe_Timed(self.sample_rate, self.slot_rate),
-            PlotPipe(factory(), title='Rect correlator | FPGA', sample_rate=self.sample_rate),
-            ThresholdModule(self.threshold, self.sample_rate, plot_input=factory()),
+                                 plot_input=factory(), fft_plot_input=factory_fft()),
+            HMCAD1511(self.sample_rate, self.sample_rate, plot_input=factory(), fft_plot_input=factory_fft()),
+            RectCorrModule_Timed(self.sample_rate, self.slot_rate,
+                                plot_input=factory(), fft_plot_input=factory_fft()),
+            ThresholdModule(self.threshold, self.sample_rate, plot_input=factory(), fft_plot_input=factory_fft()),
             BestFitPipe_Timed(self.sample_rate, self.slot_rate),
             PlotPipe(factory(), title='BestFitPipe | FPGA', sample_rate=self.sample_rate),
+            FftPlotPipe(factory_fft(), title='BestFitPipe | FPGA', sample_rate=self.sample_rate),
             DecodePlotSink_Timed(
             len(self.input_data), self.chunk_size, self.ppm_rank,
             self.sample_rate, self.slot_rate,
-            plot_input=factory(),
+            plot_input=factory(), fft_plot_input=factory_fft(),
         )
         ]
 
@@ -137,6 +155,8 @@ class PhyModel(ABCModel):
 
         if self.axes is not None and self.fig is not None:
             self.fig.tight_layout(h_pad=1, w_pad=1)
+        if self.axes_fft is not None and self.fig_fft is not None:
+            self.fig_fft.tight_layout(h_pad=1, w_pad=1)
 
         decoded = self.decoder.decoded_data
         return ModelResult(
@@ -149,7 +169,12 @@ class PhyModel(ABCModel):
     def reset(self) -> None:
         self.runner.reset()
 
-    def save_plot(self, path: str) -> None:
+    def save_plot(self, path: str, fft_path: str | None = None) -> None:
         if self.fig is None:
             raise RuntimeError("plotting=False, no figure to save")
         self.fig.savefig(path, dpi=800)
+
+        if fft_path is not None:
+            if self.fig_fft is None:
+                raise RuntimeError("plotting=False, no FFT figure to save")
+            self.fig_fft.savefig(fft_path, dpi=800)

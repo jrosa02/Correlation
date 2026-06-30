@@ -1,5 +1,5 @@
 from dzida_phy.models.phy_model import PhyModel
-from dzida_phy.physical_units import MHz, kHz, ns, s
+from dzida_phy.physical_units import MHz, kHz, ns
 
 model = PhyModel(
     threshold = 0.3,
@@ -20,4 +20,4 @@ print(f"WER: {result.wer:.4f}")
 print(f"BER: {result.ber:.6f}")
 print(f"Per-bit BER: {result.per_bit_ber}")
 
-model.save_plot("output/plot.png")
+model.save_plot("output/plot.png", "output/fft.png")

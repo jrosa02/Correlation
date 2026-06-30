@@ -355,7 +355,7 @@ static void corr_left_edge(
         double sum = 0.0;
         for (int k = 0; k < RL; k++) {
             int j = i + k - half;
-            sum += row[j < 0 ? 0 : j] * ref[k];
+            sum += (j < 0 ? 0.0 : row[j]) * ref[k];
         }
         dst[i] = sum / RL;
     }
@@ -382,7 +382,7 @@ static void corr_right_edge(
         double sum = 0.0;
         for (int k = 0; k < RL; k++) {
             int j = i + k - half;
-            sum += row[j >= row_len ? row_len - 1 : j] * ref[k];
+            sum += (j >= row_len ? 0.0 : row[j]) * ref[k];
         }
         dst[i] = sum / RL;
     }

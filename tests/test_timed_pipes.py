@@ -1,13 +1,15 @@
+import numpy as np
 import pytest
 
 from dzida_phy.physical_units import Quantity, MHz, kHz, Hz, ns, us, ms, s
 from dzida_phy import (
     BandpassPipe_Simple, BandpassPipe_Timed,
     UpSampler_Simple, UpSampler_Timed,
-    CorrPipe_Simple, CorrPipe_Timed,
+    CorrPipe_Simple, CorrPipe_Timed, RectCorrModule_Timed,
     DecodeSink_Simple, DecodeSink_Timed,
     BestFitPipe_Simple, BestFitPipe_Timed,
 )
+from dzida_phy.correlator_pipe import rect_reference
 
 
 # --- physical_units ---
@@ -121,6 +123,49 @@ class TestCorrPipeTimed:
     def test_ref_type_passthrough(self):
         c = CorrPipe_Timed(200 * MHz, 6.25 * MHz, ref_type='triangle')
         assert c.ref_type == 'triangle'
+
+
+# --- rect_reference (recovered from the compiled corr_ext kernel) ---
+
+class TestRectReference:
+    PULSE_WIDTHS = [4, 8, 16, 32, 64, 128, 256]
+
+    @pytest.mark.parametrize("pw", PULSE_WIDTHS)
+    def test_length(self, pw):
+        assert len(rect_reference(pw)) == 2 * pw
+
+    @pytest.mark.parametrize("pw", PULSE_WIDTHS)
+    def test_zero_mean(self, pw):
+        # bipolar template: -1...-1 | +1...+1 | -1...-1, integral ~= 0
+        assert rect_reference(pw).sum() == pytest.approx(0.0, abs=1e-10)
+
+    @pytest.mark.parametrize("pw", PULSE_WIDTHS)
+    def test_symmetric_palindrome(self, pw):
+        ref = rect_reference(pw)
+        assert np.allclose(ref, ref[::-1])
+
+    def test_exact_values_pw4(self):
+        # smallest table (RECT_4 in corr_ext.cpp), hand-checkable
+        assert np.allclose(rect_reference(4), [-1, -2, 2, 1, 1, 2, -2, -1])
+
+    def test_unsupported_pulse_width_raises(self):
+        with pytest.raises(ValueError):
+            rect_reference(7)
+
+
+# --- RectCorrModule_Timed ---
+
+class TestRectCorrModuleTimed:
+    def test_constructs_without_plotting(self):
+        m = RectCorrModule_Timed(200 * MHz, 6.25 * MHz)
+        assert m.pipes[0].pulse_width == 32
+
+    def test_runs_signal_through(self):
+        m = RectCorrModule_Timed(200 * MHz, 6.25 * MHz)
+        sig = np.zeros((1, 256))
+        sig[0, 128] = 1.0
+        out = m.pipes[0].process(sig)
+        assert out.shape == sig.shape
 
 
 # --- DecodeSink_Timed ---

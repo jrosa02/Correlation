@@ -119,6 +119,39 @@ class TestEdgePadding:
         out = _c_correlate(sig, 0, pw)
         assert np.isfinite(out[-1])
 
+    @pytest.mark.parametrize("pw", PULSE_WIDTHS)
+    def test_matches_numpy_at_first_sample(self, pw):
+        """Regression test: edges used to clamp to the boundary sample instead of
+        zero-padding, which only shows up exactly at the boundary positions."""
+        sig = RNG.standard_normal(256)
+        ref = _rect_ref(pw)
+        expected = _numpy_correlate(sig, ref)
+        got = _c_correlate(sig, 0, pw)
+        assert got[0] == pytest.approx(expected[0], abs=1e-12)
+
+    @pytest.mark.parametrize("pw", PULSE_WIDTHS)
+    def test_matches_numpy_at_last_sample(self, pw):
+        sig = RNG.standard_normal(256)
+        ref = _rect_ref(pw)
+        expected = _numpy_correlate(sig, ref)
+        got = _c_correlate(sig, 0, pw)
+        assert got[-1] == pytest.approx(expected[-1], abs=1e-12)
+
+    def test_leading_zero_outside_window_not_clamped(self):
+        """A single sample placed right at the left edge should only ever be
+        weighted by the one ref tap that aligns with it — if out-of-bounds taps
+        were clamped to row[0] instead of zero, this sum would pick up extra
+        copies of that tap and diverge from the single-tap expectation."""
+        pw = 8
+        ref = _rect_ref(pw)
+        half = len(ref) // 2
+        sig = np.zeros(256)
+        sig[0] = 1.0
+        out = _c_correlate(sig, 0, pw)
+        # out[0] = sum_k row[k-half]*ref[k]/len(ref); only k=half (row[0]) is in-bounds
+        expected_out0 = ref[half] / len(ref)
+        assert out[0] == pytest.approx(expected_out0, abs=1e-14)
+
 
 # --- normalization ---
 

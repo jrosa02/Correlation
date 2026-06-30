@@ -3,11 +3,13 @@ from dzida_phy.noise_pipe import AWGN, BrownianNoise
 from dzida_phy.filter_pipe import LowpassPipe_Timed
 from dzida_phy.signal_pipe import CompoundPipe
 from dzida_phy.plot_pipe import PlotPipe, PlotInput
+from dzida_phy.fft_plot_pipe import FftPlotPipe
 from dzida_phy.physical_units import Quantity
 
 class DetectorPipe(CompoundPipe):
     def __init__(self, resolution: Quantity, band: Quantity, noise_to_signal: float,
-                 brownian_power: float | None = None, plot_input: PlotInput | None = None, seed: int = 42) -> None:
+                 brownian_power: float | None = None, plot_input: PlotInput | None = None,
+                 fft_plot_input: PlotInput | None = None, seed: int = 42) -> None:
         if not isinstance(band, Quantity) and hasattr(band, '__float__'):
             band = Quantity(float(band))
 
@@ -15,7 +17,8 @@ class DetectorPipe(CompoundPipe):
         awgn     = AWGN(noise_to_signal)
         brownian = BrownianNoise(brownian_power)
         self.plotpipe = PlotPipe(plot_input, title="Detector", sample_rate=resolution, seed=seed) if plot_input else None
-        super().__init__([lowpass, awgn, brownian, self.plotpipe], seed)
+        self.fftplotpipe = FftPlotPipe(fft_plot_input, title="Detector", sample_rate=resolution, seed=seed) if fft_plot_input else None
+        super().__init__([lowpass, awgn, brownian, self.plotpipe, self.fftplotpipe], seed)
 
 class DET08CL(DetectorPipe):
     """Thorlabs DET08CL InGaAs PIN detector with Johnson (thermal) noise.
@@ -44,7 +47,7 @@ class DET08CL(DetectorPipe):
 
     def __init__(self, resolution: Quantity, band: Quantity, signal_power: float,
                  load_resistance: float | None = None, plot_input: PlotInput | None = None,
-                 seed: int = 42) -> None:
+                 fft_plot_input: PlotInput | None = None, seed: int = 42) -> None:
         """
         Args:
             resolution: Sample rate (Quantity)
@@ -52,6 +55,7 @@ class DET08CL(DetectorPipe):
             signal_power: Received optical power (W)
             load_resistance: Override R_L (ohms). If None, derived from band.
             plot_input: Optional PlotInput for visualization
+            fft_plot_input: Optional PlotInput for FFT spectrum visualization
             seed: Random seed
         """
         if not isinstance(band, Quantity):
@@ -83,10 +87,12 @@ class DET08CL(DetectorPipe):
                              / signal_power) if signal_power > 0 else 0.0
         thermal_brownian_power = thermal_drift_amp ** 2
 
-        super().__init__(resolution, band, noise_to_signal, thermal_brownian_power, plot_input, seed)
+        super().__init__(resolution, band, noise_to_signal, thermal_brownian_power, plot_input, fft_plot_input, seed)
 
+        title = (f"DET08CL | Photodiode - (R_L={load_resistance/1e3:.0f}kΩ), "
+                f"P_in:{signal_power:.2e}W, f_BW:{f_bw/1e6:.1f}MHz, "
+                f"SNR:{snr_db:.3f}dB")
         if self.plotpipe is not None:
-            title = (f"DET08CL | Photodiode - (R_L={load_resistance/1e3:.0f}kΩ), "
-                    f"P_in:{signal_power:.2e}W, f_BW:{f_bw/1e6:.1f}MHz, "
-                    f"SNR:{snr_db:.3f}dB")
             self.plotpipe.ax.set_title(title)
+        if self.fftplotpipe is not None:
+            self.fftplotpipe.ax.set_title(title)

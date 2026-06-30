@@ -98,11 +98,16 @@ class DecodePlotSink_Timed(CompoundPipe):
 
     def __init__(self, data_len: int, chunk_size: int, n_slots: int,
                  sample_rate: Quantity, slot_rate: Quantity,
-                 plot_input: PlotInput | None = None, seed: int = 42) -> None:
+                 plot_input: PlotInput | None = None, fft_plot_input: PlotInput | None = None,
+                 seed: int = 42) -> None:
         self._decoder = DecodePipe_Timed(data_len, chunk_size, n_slots,
                                          sample_rate, slot_rate, seed)
         plotpipe = PlotPipe(plot_input, 'bar', title='Decoded PPM | FPGA',
                             sample_rate=None, seed=seed) if plot_input else None
+        # Decoded symbol indices are symbol-rate, not sample-rate — no meaningful FFT.
+        if fft_plot_input is not None:
+            fft_plot_input.ax.set_title('Decoded PPM | FPGA')
+            fft_plot_input.ax.axis('off')
         super().__init__([self._decoder, plotpipe, Terminator()], seed)
 
     @property

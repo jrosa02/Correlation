@@ -1,11 +1,12 @@
 from .noise_pipe import AWGN, BrownianNoise
 from .quantization_pipe import QuantizatorPipe
 from .plot_pipe import PlotPipe
+from .fft_plot_pipe import FftPlotPipe
 from .ppmbin_pipe import BinPPMGen
 from .runner_pipe import SignalPipeRunner
 from .sampling_pipe import UpSampler_Simple, UpSampler_Timed
 from .signal_pipe import Terminator
-from .correlator_pipe import CorrPipe_Simple, CorrPipe_Timed
+from .correlator_pipe import CorrPipe_Simple, CorrPipe_Timed, RectCorrModule_Timed
 from .filter_pipe import (BandpassPipe_Simple, BandpassPipe_Timed, HighpassPipe_Timed,
                           HighpassModule_Timed, LowpassModule_Timed, BandpassModule_Timed)
 from .threshold_pipe import ThresholdPipe, ThresholdModule
@@ -17,6 +18,7 @@ __all__ = [
     "BrownianNoise",
     "QuantizatorPipe",
     "PlotPipe",
+    "FftPlotPipe",
     "BinPPMGen",
     "SignalPipeRunner",
     "UpSampler_Simple",
@@ -24,6 +26,7 @@ __all__ = [
     "Terminator",
     "CorrPipe_Simple",
     "CorrPipe_Timed",
+    "RectCorrModule_Timed",
     "BandpassPipe_Simple",
     "BandpassPipe_Timed",
     "HighpassPipe_Timed",
